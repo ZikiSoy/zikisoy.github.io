@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font-size:14px}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>MIDI 练琴播放器</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one narrow column like a practice-room control panel; keyboard strip is the visual anchor */
+:root{
+  --bg:#eef0f2; --panel:#ffffff; --ink:#15181c; --muted:#5d6670; --line:#d5dade;
+  --accent:#0d7a6f; --accent-ink:#ffffff; --key-white:#fbfbf9; --key-black:#1b1d21; --lit:#14a394; --warn:#b4471f;
+  --mono:"DM Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+  --sans:system-ui,-apple-system,"PingFang SC","Noto Sans SC","Microsoft YaHei",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#111417; --panel:#1a1e22; --ink:#e9ecee; --muted:#98a2ab; --line:#2c3237;
+  --accent:#2bb5a6; --accent-ink:#06211e; --key-white:#d9dcd8; --key-black:#0b0c0e; --lit:#36d1bf; --warn:#e8885f; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#111417; --panel:#1a1e22; --ink:#e9ecee; --muted:#98a2ab; --line:#2c3237;
+  --accent:#2bb5a6; --accent-ink:#06211e; --key-white:#d9dcd8; --key-black:#0b0c0e; --lit:#36d1bf; --warn:#e8885f; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5}
+.wrap{max-width:560px;margin:0 auto;padding-block:20px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:14px}
+h1{font-size:20px;margin:0;text-wrap:balance;letter-spacing:.01em}
+.sub{color:var(--muted);font-size:13px;margin:2px 0 0}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:12px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.label{font-size:12px;color:var(--muted);letter-spacing:.06em}
+.status{display:flex;align-items:center;gap:8px;font-size:14px;min-width:0}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--muted);flex:none}
+.dot.on{background:var(--lit)} .dot.err{background:var(--warn)}
+.status span{min-width:0;overflow-wrap:anywhere}
+button,select,.filebtn{font:inherit;font-size:15px;border-radius:9px;border:1px solid var(--line);background:var(--bg);color:var(--ink);padding:9px 14px;cursor:pointer;min-height:42px}
+button:focus-visible,select:focus-visible,input:focus-visible,.filebtn:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+button:disabled{opacity:.45;cursor:default}
+select{flex:1;min-width:0}
+.filebtn{display:inline-flex;align-items:center;position:relative}
+.filebtn input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.song{font-size:17px;font-weight:600;overflow-wrap:anywhere}
+.meta{display:flex;gap:16px;flex-wrap:wrap;font-family:var(--mono);font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.tag{font-size:11px;letter-spacing:.06em;border:1px solid var(--line);border-radius:999px;padding:1px 8px;color:var(--muted);font-family:var(--sans)}
+canvas{width:100%;height:64px;display:block;border-radius:6px;background:var(--key-black)}
+input[type=range]{width:100%;accent-color:var(--accent);margin:0}
+.times{display:flex;justify-content:space-between;font-family:var(--mono);font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.transport{display:grid;grid-template-columns:1fr 2fr 1fr;gap:10px}
+.transport button{min-height:52px;font-size:16px}
+.adj{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:420px){.adj{grid-template-columns:1fr}}
+.ctl{display:flex;flex-direction:column;gap:6px;min-width:0}
+.val{font-family:var(--mono);font-size:15px;font-variant-numeric:tabular-nums}
+.step{display:flex;align-items:center;gap:10px}
+.step button{width:44px;padding:0}
+.step .val{min-width:3.5ch;text-align:center}
+.help{font-size:13px;color:var(--muted);margin:0;padding-left:1.2em}
+.help li{margin:2px 0}
+.err-msg{color:var(--warn);font-size:13px;margin:0}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>MIDI 练琴播放器</h1>
+    <p class="sub">把 MIDI 文件通过 USB 发给电钢琴，用琴自己的音色播放。</p>
+  </header>
+
+  <section class="panel" aria-label="连接">
+    <div class="row" style="justify-content:space-between">
+      <div class="status"><i class="dot" id="dot"></i><span id="statusText">还没连接琴</span></div>
+      <button id="connectBtn" class="primary">连接琴</button>
+    </div>
+    <div class="row" id="devRow" hidden>
+      <label class="label" for="devSel">输出到</label>
+      <select id="devSel"></select>
+    </div>
+    <p class="err-msg" id="errMsg" hidden></p>
+  </section>
+
+  <section class="panel" aria-label="曲目">
+    <div class="row" style="justify-content:space-between">
+      <div style="min-width:0;flex:1">
+        <div class="song" id="songName">小星星</div>
+        <div class="meta" id="songMeta"></div>
+      </div>
+      <label class="filebtn">打开文件<input type="file" id="fileIn" accept=".mid,.midi,audio/midi,audio/x-midi"></label>
+    </div>
+    <canvas id="kb" aria-label="琴键显示"></canvas>
+    <div>
+      <input type="range" id="seek" min="0" max="1000" step="10" value="0" aria-label="播放位置">
+      <div class="times"><span id="tNow">0:00</span><span id="tEnd">0:00</span></div>
+    </div>
+    <div class="transport">
+      <button id="stopBtn">停止</button>
+      <button id="playBtn" class="primary">播放</button>
+      <button id="panicBtn" title="让所有卡住的音停下">消音</button>
+    </div>
+  </section>
+
+  <section class="panel adj" aria-label="练习设置">
+    <div class="ctl">
+      <label class="label" for="speed">速度 <span class="val" id="speedVal">100%</span></label>
+      <input type="range" id="speed" min="40" max="150" step="5" value="100">
+    </div>
+    <div class="ctl">
+      <span class="label">移调（半音）</span>
+      <div class="step">
+        <button id="trDown" aria-label="降半音">−</button>
+        <span class="val" id="trVal">0</span>
+        <button id="trUp" aria-label="升半音">+</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <span class="label">怎么用</span>
+    <ol class="help">
+      <li>用 OTG 转接头和 USB 线把手机连到琴背面的 USB 口。</li>
+      <li>用安卓版 Chrome 打开这个页面，点“连接琴”，允许 MIDI 权限。</li>
+      <li>点“打开文件”选一个 .mid 文件，然后点播放。</li>
+      <li>有音卡住不停时，点“消音”。打击乐（第 10 通道）不参与移调。</li>
+    </ol>
+  </section>
+</div>
+
+<script>
+(function(){
+"use strict";
+const $=id=>document.getElementById(id);
+const LOOK=120, TICK=25;
+
+/* ---------- MIDI file parser ---------- */
+function parseMidi(buf){
+  const d=new DataView(buf); const len=d.byteLength; let p=0;
+  const str=(at,n)=>{let s='';for(let i=0;i<n;i++)s+=String.fromCharCode(d.getUint8(at+i));return s};
+  if(len<14||str(0,4)!=='MThd') throw new Error('这不是有效的 MIDI 文件');
+  const hlen=d.getUint32(4), ntrks=d.getUint16(10), div=d.getUint16(12);
+  p=8+hlen;
+  const raw=[]; let seq=0, tracks=0;
+  for(let t=0;t<ntrks&&p+8<=len;t++){
+    const id=str(p,4), tlen=d.getUint32(p+4); p+=8;
+    const end=Math.min(p+tlen,len);
+    if(id!=='MTrk'){p=end;continue}
+    tracks++;
+    let tick=0, rs=0;
+    const vlq=()=>{let v=0,b;do{if(p>=end)return v;b=d.getUint8(p++);v=v*128+(b&0x7f)}while(b&0x80);return v};
+    while(p<end){
+      tick+=vlq(); if(p>=end)break;
+      let st=d.getUint8(p);
+      if(st<0x80){ if(!rs)break; st=rs; } else p++;
+      if(st===0xFF){
+        const type=d.getUint8(p++); const l=vlq();
+        if(type===0x51&&l===3) raw.push({tick,seq:seq++,tempo:(d.getUint8(p)<<16)|(d.getUint8(p+1)<<8)|d.getUint8(p+2)});
+        p+=l; if(type===0x2F)break;
+      }else if(st===0xF0||st===0xF7){ const l=vlq(); p+=l; }
+      else{
+        rs=st; const hi=st&0xF0; const n=(hi===0xC0||hi===0xD0)?1:2;
+        if(p+n>end)break;
+        const m=[st]; for(let i=0;i<n;i++)m.push(d.getUint8(p++)&0x7f);
+        raw.push({tick,seq:seq++,msg:m});
+      }
+    }
+    p=end;
+  }
+  raw.sort((a,b)=>a.tick-b.tick||a.seq-b.seq);
+  const events=[]; let ms=0,last=0,tempo=500000,notes=0;
+  const smpte=div&0x8000;
+  const msPerTickSmpte=smpte?1000/((256-(div>>8))*(div&0xff)):0;
+  for(const e of raw){
+    ms+=(e.tick-last)*(smpte?msPerTickSmpte:tempo/div/1000); last=e.tick;
+    if(e.tempo){tempo=e.tempo;continue}
+    if((e.msg[0]&0xF0)===0x90&&e.msg[2]>0)notes++;
+    events.push({t:ms,msg:e.msg});
+  }
+  return {events,duration:ms,notes,tracks};
+}
+
+/* ---------- demo song (public-domain tune, built in code) ---------- */
+function demoSong(){
+  const ev=[{t:0,msg:[0xC0,0]},{t:0,msg:[0xC1,0]}]; const q=520;
+  const mel=[60,60,67,67,69,69,67,0,65,65,64,64,62,62,60,0,67,67,65,65,64,64,62,0,67,67,65,65,64,64,62,0,60,60,67,67,69,69,67,0,65,65,64,64,62,62,60,0];
+  const bass=[48,52,53,48,53,48,43,48,48,53,48,43,48,53,48,43,48,52,53,48,53,48,43,48];
+  mel.forEach((n,i)=>{ if(!n)return; const len=(mel[i+1]===0?2:1)*q-40; ev.push({t:i*q,msg:[0x90,n,88]},{t:i*q+len,msg:[0x80,n,0]}); });
+  bass.forEach((n,i)=>{ ev.push({t:i*2*q,msg:[0x91,n,62]},{t:i*2*q+2*q-60,msg:[0x81,n,0]}); });
+  ev.sort((a,b)=>a.t-b.t);
+  return {events:ev,duration:mel.length*q,notes:mel.filter(Boolean).length+bass.length,tracks:2};
+}
+
+/* ---------- state ---------- */
+let midi=null, out=null, song=null, songName='小星星';
+let playing=false, idx=0, anchorPerf=0, anchorPos=0, pausePos=0, speed=1, transpose=0;
+let timer=0, gen=0, wakeLock=null, dragging=false;
+const active=new Set();   // sounding notes sent to device, key = ch*128+note
+const lit=new Set();      // notes drawn on keyboard
+
+const fmt=ms=>{ms=Math.max(0,ms);const s=Math.floor(ms/1000);return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')};
+const posAt=now=>playing?anchorPos+(now-anchorPerf)*speed:pausePos;
+
+function send(m,at){ if(!out)return; try{ at==null?out.send(m):out.send(m,at); }catch(e){} }
+
+function mapMsg(m){
+  const hi=m[0]&0xF0, ch=m[0]&0x0F;
+  if((hi===0x80||hi===0x90)&&ch!==9&&transpose){
+    const n=m[1]+transpose; if(n<0||n>127)return null; return [m[0],n,m[2]];
+  }
+  return m;
+}
+
+function schedule(e,at,now){
+  const m=mapMsg(e.msg); if(!m)return;
+  const hi=m[0]&0xF0, key=(m[0]&15)*128+m[1];
+  const on=hi===0x90&&m[2]>0, off=hi===0x80||(hi===0x90&&m[2]===0);
+  if(on)active.add(key); else if(off)active.delete(key);
+  send(m,at);
+  if(on||off){
+    const g=gen, note=m[1], drum=(m[0]&15)===9;
+    if(drum)return;
+    setTimeout(()=>{ if(g!==gen)return; on?lit.add(note):lit.delete(note); drawKb(); }, Math.max(0,at-now));
+  }
+}
+
+function pump(){
+  if(!playing||!song)return;
+  const now=performance.now(), horizon=posAt(now+LOOK), ev=song.events;
+  while(idx<ev.length&&ev[idx].t<=horizon){
+    const e=ev[idx++]; const at=anchorPerf+(e.t-anchorPos)/speed;
+    schedule(e,Math.max(at,now),now);
+  }
+  const p=posAt(now);
+  if(!dragging){ $('seek').value=Math.min(p,song.duration); $('tNow').textContent=fmt(p); }
+  if(idx>=ev.length&&p>=song.duration+200){ stop(); }
+}
+
+function silence(){
+  if(out){
+    try{ out.clear&&out.clear(); }catch(e){}
+    const offs=[]; active.forEach(k=>offs.push([0x80|(k>>7),k&127,0]));
+    const later=performance.now()+LOOK+40;
+    for(const at of [null,later]){
+      offs.forEach(m=>send(m,at));
+      for(let c=0;c<16;c++){ send([0xB0|c,64,0],at); send([0xB0|c,123,0],at); }
+    }
+  }
+  active.clear(); gen++; lit.clear(); drawKb();
+}
+
+function restoreState(pos){
+  // resend last program / controller / bend values before the start point
+  const prog={}, cc={}, bend={};
+  for(const e of song.events){
+    if(e.t>=pos)break;
+    const m=e.msg, hi=m[0]&0xF0, ch=m[0]&15;
+    if(hi===0xC0)prog[ch]=m;
+    else if(hi===0xB0&&m[1]<120&&m[1]!==64)cc[ch*128+m[1]]=m;
+    else if(hi===0xE0)bend[ch]=m;
+  }
+  [prog,cc,bend].forEach(o=>Object.values(o).forEach(m=>send(m)));
+}
+
+function play(){
+  if(!song)return;
+  if(!out){ showErr('请先点“连接琴”。'); return; }
+  if(pausePos>=song.duration)pausePos=0;
+  idx=song.events.findIndex(e=>e.t>=pausePos); if(idx<0)idx=song.events.length;
+  if(pausePos>0)restoreState(pausePos);
+  anchorPos=pausePos; anchorPerf=performance.now()+30; playing=true;
+  clearInterval(timer); timer=setInterval(pump,TICK); pump();
+  $('playBtn').textContent='暂停';
+  try{ navigator.wakeLock&&navigator.wakeLock.request('screen').then(l=>wakeLock=l).catch(()=>{}); }catch(e){}
+}
+function pause(){
+  if(!playing)return;
+  pausePos=Math.min(posAt(performance.now()),song.duration);
+  playing=false; clearInterval(timer); silence();
+  $('playBtn').textContent='播放';
+  try{ wakeLock&&wakeLock.release(); }catch(e){} wakeLock=null;
+}
+function stop(){
+  pause(); playing=false; clearInterval(timer); silence(); pausePos=0;
+  $('seek').value=0; $('tNow').textContent=fmt(0); $('playBtn').textContent='播放';
+}
+function seekTo(ms){
+  const was=playing; if(was)pause();
+  pausePos=Math.max(0,Math.min(ms,song.duration));
+  $('tNow').textContent=fmt(pausePos);
+  if(was)play();
+}
+
+/* ---------- keyboard drawing (A0–C8) ---------- */
+const cv=$('kb'), ctx=cv.getContext('2d');
+const isBlack=n=>[1,3,6,8,10].includes(n%12);
+function drawKb(){
+  const css=getComputedStyle(document.documentElement);
+  const W=cv.clientWidth, H=cv.clientHeight, dpr=window.devicePixelRatio||1;
+  if(!W)return;
+  if(cv.width!==Math.round(W*dpr)){cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr)}
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  const kw=css.getPropertyValue('--key-white').trim(), kb=css.getPropertyValue('--key-black').trim(), lc=css.getPropertyValue('--lit').trim();
+  ctx.fillStyle=kb; ctx.fillRect(0,0,W,H);
+  let whites=0; for(let n=21;n<=108;n++)if(!isBlack(n))whites++;
+  const ww=W/whites; let x=0; const pos={};
+  for(let n=21;n<=108;n++){ if(isBlack(n))continue; pos[n]=x;
+    ctx.fillStyle=lit.has(n)?lc:kw; ctx.fillRect(x+0.5,0,ww-1,H); x+=ww; }
+  const bw=ww*0.62, bh=H*0.6;
+  for(let n=22;n<=108;n++){ if(!isBlack(n))continue; const bx=pos[n-1]+ww-bw/2;
+    ctx.fillStyle=lit.has(n)?lc:kb; ctx.fillRect(bx,0,bw,bh); }
+}
+window.addEventListener('resize',drawKb);
+if(window.matchMedia)matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change',drawKb);
+
+/* ---------- song loading ---------- */
+function loadSong(s,name){
+  stop(); song=s; songName=name;
+  $('songName').textContent=name;
+  $('songMeta').innerHTML='';
+  const items=[fmt(s.duration),s.notes+' 个音符',s.tracks+' 轨'];
+  items.forEach(t=>{const sp=document.createElement('span');sp.textContent=t;$('songMeta').appendChild(sp)});
+  if(name==='小星星'){const tg=document.createElement('span');tg.className='tag';tg.textContent='示例曲';$('songMeta').appendChild(tg)}
+  $('seek').max=Math.max(1,Math.ceil(s.duration)); $('tEnd').textContent=fmt(s.duration);
+}
+$('fileIn').addEventListener('change',ev=>{
+  const f=ev.target.files[0]; if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{ try{ const s=parseMidi(r.result); if(!s.events.length)throw new Error('文件里没有可以播放的音符'); loadSong(s,f.name.replace(/\.(mid|midi)$/i,'')); hideErr(); }
+    catch(e){ showErr('打不开这个文件：'+e.message); } };
+  r.readAsArrayBuffer(f); ev.target.value='';
+});
+
+/* ---------- MIDI device ---------- */
+function setStatus(text,cls){ $('statusText').textContent=text; $('dot').className='dot'+(cls?' '+cls:''); }
+function showErr(t){ $('errMsg').textContent=t; $('errMsg').hidden=false; }
+function hideErr(){ $('errMsg').hidden=true; }
+function refreshOutputs(){
+  const sel=$('devSel'), prev=out&&out.id; sel.innerHTML='';
+  const outs=[...midi.outputs.values()];
+  outs.forEach(o=>{const op=document.createElement('option');op.value=o.id;op.textContent=o.name||'MIDI 设备';sel.appendChild(op)});
+  $('devRow').hidden=!outs.length;
+  if(!outs.length){ out=null; setStatus('没找到琴。检查 USB 线和 OTG 转接头。','err'); return; }
+  const pick=outs.find(o=>o.id===prev)||outs.find(o=>/casio|cdp|usb/i.test(o.name||''))||outs[0];
+  sel.value=pick.id; useOutput(pick);
+}
+function useOutput(o){ if(out&&out!==o){silence()} out=o; setStatus('已连接：'+(o.name||'MIDI 设备'),'on'); $('connectBtn').hidden=true; }
+$('devSel').addEventListener('change',e=>{ const o=midi.outputs.get(e.target.value); if(o){ pause(); useOutput(o); } });
+$('connectBtn').addEventListener('click',()=>{
+  hideErr();
+  if(!navigator.requestMIDIAccess){ setStatus('这个浏览器不支持 MIDI','err'); showErr('请用安卓版 Chrome 打开这个页面。'); return; }
+  navigator.requestMIDIAccess({sysex:false}).then(m=>{ midi=m; m.onstatechange=refreshOutputs; refreshOutputs(); })
+    .catch(()=>{ setStatus('无法使用 MIDI','err'); showErr('MIDI 权限被拒绝，或者当前页面不允许使用 MIDI。请把这个页面保存成文件，直接用 Chrome 打开。'); });
+});
+
+/* ---------- controls ---------- */
+$('playBtn').addEventListener('click',()=>playing?pause():play());
+$('stopBtn').addEventListener('click',stop);
+$('panicBtn').addEventListener('click',()=>{ const was=playing; if(was)pause(); silence(); });
+$('seek').addEventListener('input',e=>{ dragging=true; $('tNow').textContent=fmt(+e.target.value); });
+$('seek').addEventListener('change',e=>{ dragging=false; if(song)seekTo(+e.target.value); });
+$('speed').addEventListener('input',e=>{
+  const now=performance.now(); const p=posAt(now);
+  speed=e.target.value/100; $('speedVal').textContent=e.target.value+'%';
+  if(playing){ anchorPos=p; anchorPerf=now; }
+});
+function setTr(v){ v=Math.max(-12,Math.min(12,v)); if(v===transpose)return;
+  const was=playing; if(was)pause(); transpose=v; $('trVal').textContent=(v>0?'+':'')+v; if(was)play(); }
+$('trDown').addEventListener('click',()=>setTr(transpose-1));
+$('trUp').addEventListener('click',()=>setTr(transpose+1));
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'&&playing&&navigator.wakeLock){ navigator.wakeLock.request('screen').then(l=>wakeLock=l).catch(()=>{}); } });
+
+loadSong(demoSong(),'小星星');
+requestAnimationFrame(drawKb);
+})();
+</script>
+
+</body>
+</html>
