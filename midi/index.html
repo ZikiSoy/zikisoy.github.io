@@ -14,16 +14,16 @@
 /* Layout: one narrow column like a practice-room control panel; full-screen stage is a dark falling-notes view */
 :root{
   --bg:#eef0f2; --panel:#ffffff; --ink:#15181c; --muted:#5d6670; --line:#d5dade;
-  --accent:#0d7a6f; --accent-ink:#ffffff; --key-white:#fbfbf9; --key-black:#1b1d21; --lit:#14a394; --warn:#b4471f;
+  --accent:#0d7a6f; --accent-ink:#ffffff; --key-white:#fbfbf9; --key-black:#1b1d21; --lit:#14a394; --litL:#6b5bd6; --warn:#b4471f;
   --mono:"DM Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
   --sans:system-ui,-apple-system,"PingFang SC","Noto Sans SC","Microsoft YaHei",sans-serif;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#111417; --panel:#1a1e22; --ink:#e9ecee; --muted:#98a2ab; --line:#2c3237;
-  --accent:#2bb5a6; --accent-ink:#06211e; --key-white:#d9dcd8; --key-black:#0b0c0e; --lit:#36d1bf; --warn:#e8885f; color-scheme:dark}}
+  --accent:#2bb5a6; --accent-ink:#06211e; --key-white:#d9dcd8; --key-black:#0b0c0e; --lit:#36d1bf; --litL:#9a8cff; --warn:#e8885f; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#111417; --panel:#1a1e22; --ink:#e9ecee; --muted:#98a2ab; --line:#2c3237;
-  --accent:#2bb5a6; --accent-ink:#06211e; --key-white:#d9dcd8; --key-black:#0b0c0e; --lit:#36d1bf; --warn:#e8885f; color-scheme:dark}
+  --accent:#2bb5a6; --accent-ink:#06211e; --key-white:#d9dcd8; --key-black:#0b0c0e; --lit:#36d1bf; --litL:#9a8cff; --warn:#e8885f; color-scheme:dark}
 body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.5}
 .wrap{max-width:560px;margin:0 auto;padding-block:20px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:14px}
 h1{font-size:20px;margin:0;text-wrap:balance;letter-spacing:.01em}
@@ -31,7 +31,7 @@ h1{font-size:20px;margin:0;text-wrap:balance;letter-spacing:.01em}
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:12px}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .label{font-size:12px;color:var(--muted);letter-spacing:.06em}
-.status{display:flex;align-items:center;gap:8px;font-size:14px;min-width:0}
+.status{display:flex;align-items:center;gap:8px;font-size:14px;min-width:0;flex:1}
 .dot{width:9px;height:9px;border-radius:50%;background:var(--muted);flex:none}
 .dot.on{background:var(--lit)} .dot.err{background:var(--warn)}
 .status span{min-width:0;overflow-wrap:anywhere}
@@ -42,7 +42,7 @@ button:disabled{opacity:.45;cursor:default}
 select{flex:1;min-width:0}
 .filebtn{display:inline-flex;align-items:center;position:relative;white-space:nowrap}
 .filebtn input{position:absolute;inset:0;opacity:0;cursor:pointer}
-.meta{display:flex;gap:16px;flex-wrap:wrap;font-family:var(--mono);font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.meta{display:flex;gap:6px 16px;flex-wrap:wrap;font-family:var(--mono);font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
 .tag{font-size:11px;letter-spacing:.06em;border:1px solid var(--line);border-radius:999px;padding:1px 8px;color:var(--muted);font-family:var(--sans)}
 #kb{width:100%;height:64px;display:block;border-radius:6px;background:var(--key-black)}
 input[type=range]{width:100%;accent-color:var(--accent);margin:0}
@@ -57,8 +57,18 @@ input[type=range]{width:100%;accent-color:var(--accent);margin:0}
 .step{display:flex;align-items:center;gap:10px}
 .step button{width:44px;padding:0}
 .step .val{min-width:3.5ch;text-align:center}
+.seg2{display:flex}
+.seg2 button{flex:1;border-radius:0;min-height:42px;padding:6px 8px}
+.seg2 button:first-child{border-radius:9px 0 0 9px}
+.seg2 button:last-child{border-radius:0 9px 9px 0}
+.seg2 button+button{border-left:0}
+.seg2 button.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+.chk{display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;min-height:32px}
+.chk input{width:20px;height:20px;accent-color:var(--accent);margin:0;flex:none}
+.swatch{display:inline-block;width:10px;height:10px;border-radius:3px;vertical-align:-1px;margin-right:4px}
 .help{font-size:13px;color:var(--muted);margin:0;padding-left:1.2em}
 .help li{margin:2px 0}
+.note{font-size:13px;color:var(--muted);margin:0;background:var(--bg);border-radius:8px;padding:10px 12px}
 .err-msg{color:var(--warn);font-size:13px;margin:0}
 
 /* full-screen stage: deliberately one dark look, colors set explicitly */
@@ -66,23 +76,31 @@ input[type=range]{width:100%;accent-color:var(--accent);margin:0}
 #stage .bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding-top:calc(6px + env(safe-area-inset-top,0px));padding-bottom:6px;padding-left:max(10px,env(safe-area-inset-left,0px));padding-right:max(10px,env(safe-area-inset-right,0px));background:#14171b;border-bottom:1px solid #262b31}
 #stage .bar button{background:#1f242a;color:#e8ebe6;border-color:#323840;min-height:36px;padding:5px 12px;font-size:14px}
 #stage .bar button.on{background:#2bb5a6;color:#06211e;border-color:#2bb5a6;font-weight:600}
-#stage .title{font-weight:600;font-size:14px;min-width:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#stage .songnav{display:flex;align-items:center;gap:4px;min-width:0;flex:1 1 200px}
+#stage .songnav select{flex:1;min-width:0;background:#1f242a;color:#e8ebe6;border:1px solid #323840;border-radius:8px;min-height:36px;padding:4px 8px;font-size:14px;font-weight:600}
+#stage .songnav button{min-width:40px;padding:2px 0;font-size:20px;line-height:1}
 #stage .info{font-family:var(--mono);font-size:13px;color:#9aa4ad;font-variant-numeric:tabular-nums;white-space:nowrap}
 #stage .seg{display:flex;gap:0}
 #stage .seg button{border-radius:0}
 #stage .seg button:first-child{border-radius:8px 0 0 8px}
-#stage .seg button:last-child{border-radius:0 8px 8px 0;border-left:0}
+#stage .seg button:last-child{border-radius:0 8px 8px 0}
+#stage .seg button+button{border-left:0}
 #stage[hidden],#stage .hint[hidden]{display:none}
 #fall{flex:1;width:100%;min-height:0;display:block}
-#stage .hint{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);background:rgba(20,23,27,.92);border:1px solid #323840;border-radius:12px;padding:14px 18px;text-align:center;font-size:15px;max-width:min(420px,86vw);pointer-events:auto}
+#stage .hint{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);background:rgba(20,23,27,.94);border:1px solid #323840;border-radius:12px;padding:14px 18px;text-align:center;font-size:15px;max-width:min(440px,86vw);pointer-events:auto;z-index:2}
 #stage .hint button{margin-top:10px;background:#2bb5a6;color:#06211e;border:0;font-weight:600}
+#stage .opts{position:absolute;right:max(10px,env(safe-area-inset-right,0px));top:60px;z-index:3;background:#14171b;border:1px solid #323840;border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px;width:min(300px,calc(100vw - 20px));font-size:14px;color:#e8ebe6;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+#stage .opts input[type=range]{accent-color:#2bb5a6}
+#stage .opts .chk input{accent-color:#2bb5a6}
+#stage .opts .lbl{font-size:12px;color:#9aa4ad;letter-spacing:.06em}
+#stage .opts .legend{font-size:13px;color:#9aa4ad}
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
 </style>
 
 <div class="wrap" id="main">
   <header>
     <h1>MIDI 练琴播放器</h1>
-    <p class="sub">把 MIDI 文件通过 USB 发给电钢琴，用琴自己的音色播放；也能跟着屏幕一个键一个键地学。</p>
+    <p class="sub">连上电钢琴就用琴的音色播放；没连琴（比如在 iPad 上）就用设备自己的扬声器。可以跟着落下的音符一个键一个键地学，带左右手和指法。</p>
   </header>
 
   <section class="panel" aria-label="连接">
@@ -94,6 +112,7 @@ input[type=range]{width:100%;accent-color:var(--accent);margin:0}
       <label class="label" for="devSel">输出到</label>
       <select id="devSel"></select>
     </div>
+    <p class="note" id="iosNote" hidden>苹果设备上的浏览器（包括 iPad 上的 Chrome）都不支持网页连接电钢琴，这是苹果的限制。所以在 iPad 上声音从 iPad 出来，你在琴上照着屏幕弹。学习模式听不到琴上弹的音：可以点屏幕上的琴键，或点上方空白处跳到下一个。想让琴自己发声、并且弹对了自动往下走，请用安卓手机连琴。</p>
     <p class="err-msg" id="errMsg" hidden></p>
   </section>
 
@@ -119,6 +138,16 @@ input[type=range]{width:100%;accent-color:var(--accent);margin:0}
     </div>
   </section>
 
+  <section class="panel" aria-label="练哪只手">
+    <span class="label">练哪只手</span>
+    <div class="seg2" role="group" aria-label="练哪只手">
+      <button data-hand="R">右手</button><button data-hand="L">左手</button><button data-hand="B">双手</button>
+    </div>
+    <label class="chk"><input type="checkbox" id="mFing" data-opt="fing" checked> 在音符上显示指法（1 大拇指 … 5 小指）</label>
+    <label class="chk"><input type="checkbox" id="mMute" data-opt="mute"> 演奏时把我练的那只手静音，我自己弹</label>
+    <p class="sub" style="margin:0"><span class="swatch" style="background:var(--lit)"></span>右手 <span class="swatch" style="background:var(--litL);margin-left:10px"></span>左手</p>
+  </section>
+
   <section class="panel adj" aria-label="练习设置">
     <div class="ctl">
       <label class="label" for="speed">速度 <span class="val" id="speedVal">100%</span></label>
@@ -137,26 +166,42 @@ input[type=range]{width:100%;accent-color:var(--accent);margin:0}
   <section class="panel">
     <span class="label">怎么用</span>
     <ol class="help">
-      <li>用 OTG 转接头和 USB 线把手机连到琴背面的 USB 口，用 Chrome 打开这个页面，点“连接琴”。</li>
-      <li>选一首示例曲，或点“打开文件”选 .mid 文件，然后点播放。</li>
-      <li>“全屏演奏”会横屏显示落下的音符：亮起的是正在弹的键，半亮的是接下来要弹的键。</li>
-      <li>“学习模式”会停在每个音上，等你在琴上弹对了再往下走。没连琴时也可以直接点屏幕上的琴键。</li>
-      <li>有音卡住不停时，点“消音”。打击乐（第 10 通道）不参与移调。</li>
+      <li>安卓手机：用 OTG 转接头和 USB 线连到琴背面的 USB 口，用 Chrome 打开这个页面，点“连接琴”。iPad：直接打开就能用，声音从 iPad 出来。</li>
+      <li>选一首曲子，或点“打开文件”选自己的 .mid 文件。内置曲目都有左右手。</li>
+      <li>“全屏演奏”：音符从上往下落，绿色是右手，紫色是左手，音符底部的数字是建议的指法。上方可以直接换上一首、下一首。</li>
+      <li>“学习模式”：停在每个音上，等你弹对了再走。先选“右手”或“左手”单独练，熟了再练“双手”。</li>
+      <li>指法是按手型自动算的，和教材不一样时以老师和教材为准。</li>
+      <li>有音卡住不停时，点“消音”。</li>
     </ol>
   </section>
 </div>
 
 <div id="stage" hidden>
-  <div class="bar">
+  <div class="bar" id="stBar">
     <div class="seg" role="group" aria-label="模式">
       <button id="mPlay">演奏</button><button id="mLearn">学习</button>
     </div>
-    <span class="title" id="stTitle"></span>
+    <div class="songnav">
+      <button id="stPrev" aria-label="上一首">‹</button>
+      <select id="stSong" aria-label="换一首"></select>
+      <button id="stNext" aria-label="下一首">›</button>
+    </div>
+    <div class="seg" role="group" aria-label="练哪只手">
+      <button data-hand="R">右手</button><button data-hand="L">左手</button><button data-hand="B">双手</button>
+    </div>
     <span class="info" id="stInfo"></span>
     <button id="stPlay">播放</button>
-    <button id="stTop" hidden title="和弦只学最高的那个音">只学旋律</button>
     <button id="stRestart">重来</button>
+    <button id="stOpt" aria-expanded="false">选项</button>
     <button id="stExit">退出</button>
+  </div>
+  <div class="opts" id="stOpts" hidden>
+    <label class="lbl" for="stSpeed">速度 <span id="stSpeedVal">100%</span></label>
+    <input type="range" id="stSpeed" min="40" max="150" step="5" value="100">
+    <label class="chk"><input type="checkbox" id="sFing" data-opt="fing" checked> 显示指法数字</label>
+    <label class="chk"><input type="checkbox" id="sMute" data-opt="mute"> 演奏时静音我练的那只手</label>
+    <label class="chk"><input type="checkbox" id="sSimple" data-opt="simple" checked> 学习时和弦只弹一个音（右手最高音、左手最低音）</label>
+    <div class="legend"><span class="swatch" style="background:#2bb5a6"></span>右手　<span class="swatch" style="background:#8b7cf6"></span>左手　<span class="swatch" style="background:#f2c14e"></span>现在要弹</div>
   </div>
   <canvas id="fall"></canvas>
   <div class="hint" id="stHint" hidden></div>
@@ -167,46 +212,133 @@ input[type=range]{width:100%;accent-color:var(--accent);margin:0}
 "use strict";
 const $=id=>document.getElementById(id);
 const LOOK=120, TICK=25;
+const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+const hasMIDI=!!navigator.requestMIDIAccess;
 
-/* ---------- built-in songs: public-domain tunes, right-hand melody ----------
-   token = pitch[:beats], pitch like C4 / F#4 / Bb3, R = rest, | = bar line (ignored) */
+/* ---------- built-in songs ----------
+   Each part is one hand. token = pitch[:beats]; pitch like C4 / F#4 / Bb3, chord C4+E4+G4,
+   @Am = triad in the bass register, R = rest, | = bar line. Beat = quarter note. */
+/*SONGS-START*/
+const FE_A='E5:0.25 D#5:0.25 E5:0.25 B4:0.25 D5:0.25 C5:0.25 | A4:0.5 R:0.25 C4:0.25 E4:0.25 A4:0.25 | B4:0.5 R:0.25 E4:0.25 G#4:0.25 B4:0.25 | C5:0.5 R:0.25 E4:0.25 E5:0.25 D#5:0.25 | E5:0.25 D#5:0.25 E5:0.25 B4:0.25 D5:0.25 C5:0.25 | A4:0.5 R:0.25 C4:0.25 E4:0.25 A4:0.25 | B4:0.5 R:0.25 E4:0.25 C5:0.25 B4:0.25 |';
+const FE_AL='R:1.5 | A2:0.25 E3:0.25 A3:0.25 R:0.75 | E2:0.25 E3:0.25 G#3:0.25 R:0.75 | A2:0.25 E3:0.25 A3:0.25 R:0.75 | R:1.5 | A2:0.25 E3:0.25 A3:0.25 R:0.75 | E2:0.25 E3:0.25 G#3:0.25 R:0.75 |';
+const BWV=[['C4','E4','G4','C5','E5'],['C4','D4','A4','D5','F5'],['B3','D4','G4','D5','F5'],['C4','E4','G4','C5','E5'],['C4','E4','A4','E5','A5'],['C4','D4','F#4','A4','D5'],['B3','D4','G4','D5','G5'],['B3','C4','E4','G4','C5'],['A3','C4','E4','G4','C5'],['D3','A3','D4','F#4','C5'],['G3','B3','D4','G4','B4'],['G3','Bb3','E4','G4','C#5'],['F3','A3','D4','A4','D5'],['F3','Ab3','D4','F4','B4'],['E3','G3','C4','G4','C5'],['E3','F3','A3','C4','F4'],['D3','F3','A3','C4','F4'],['G2','D3','G3','B3','F4'],['C3','E3','G3','C4','E4']];
+const bwvHalf=c=>'R:0.5 '+[2,3,4,2,3,4].map(i=>c[i]+':0.25').join(' ');
+const TM='C5:0.5 R:0.5 D5:0.25 C5:0.25 B4:0.25 C5:0.25 | E5:0.5 R:0.5 F5:0.25 E5:0.25 D#5:0.25 E5:0.25 | B5:0.25 A5:0.25 G#5:0.25 A5:0.25 B5:0.25 A5:0.25 G#5:0.25 A5:0.25 | C6:1 A5:0.5 B5:0.5 | C6:0.5 B5:0.5 A5:0.5 G#5:0.5 | A5:0.5 E5:0.5 F5:0.5 D5:0.5 | C5:1 B4:0.75 A4:0.25 |';
+const TML='@Am:1 @Am:1 | @Am:1 @Am:1 | @E:1 @Am:1 | @Am:1 @Am:1 | @Am:1 @E:1 | @Am:1 @Dm:1 | @Am:1 @E:1 |';
+const CANON_L='@D:2 @A:2 | @Bm:2 @F#m:2 | @G:2 @D:2 | @G:2 @A:2 |';
+const K1='经典名曲', K2='儿歌·民歌';
 const SONGS=[
- {name:'小星星',bpm:100,m:'C4 C4 G4 G4 | A4 A4 G4:2 | F4 F4 E4 E4 | D4 D4 C4:2 | G4 G4 F4 F4 | E4 E4 D4:2 | G4 G4 F4 F4 | E4 E4 D4:2 | C4 C4 G4 G4 | A4 A4 G4:2 | F4 F4 E4 E4 | D4 D4 C4:2'},
- {name:'欢乐颂',bpm:108,m:'E4 E4 F4 G4 | G4 F4 E4 D4 | C4 C4 D4 E4 | E4:1.5 D4:0.5 D4:2 | E4 E4 F4 G4 | G4 F4 E4 D4 | C4 C4 D4 E4 | D4:1.5 C4:0.5 C4:2 | D4 D4 E4 C4 | D4 E4:0.5 F4:0.5 E4 C4 | D4 E4:0.5 F4:0.5 E4 D4 | C4 D4 G3:2 | E4 E4 F4 G4 | G4 F4 E4 D4 | C4 C4 D4 E4 | D4:1.5 C4:0.5 C4:2'},
- {name:'玛丽有只小羊羔',bpm:110,m:'E4 D4 C4 D4 | E4 E4 E4:2 | D4 D4 D4:2 | E4 G4 G4:2 | E4 D4 C4 D4 | E4 E4 E4 E4 | D4 D4 E4 D4 | C4:4'},
- {name:'两只老虎',bpm:120,m:'C4 D4 E4 C4 | C4 D4 E4 C4 | E4 F4 G4:2 | E4 F4 G4:2 | G4:0.5 A4:0.5 G4:0.5 F4:0.5 E4 C4 | G4:0.5 A4:0.5 G4:0.5 F4:0.5 E4 C4 | C4 G3 C4:2 | C4 G3 C4:2'},
- {name:'生日快乐',bpm:100,m:'G3:0.75 G3:0.25 | A3 G3 C4 | B3:2 G3:0.75 G3:0.25 | A3 G3 D4 | C4:2 G3:0.75 G3:0.25 | G4 E4 C4 | B3 A3:2 | F4:0.75 F4:0.25 E4 C4 | D4 C4:2'},
- {name:'铃儿响叮当',bpm:120,m:'E4 E4 E4:2 | E4 E4 E4:2 | E4 G4 C4:1.5 D4:0.5 | E4:4 | F4 F4 F4:1.5 F4:0.5 | F4 E4 E4 E4:0.5 E4:0.5 | E4 D4 D4 E4 | D4:2 G4:2 | E4 E4 E4:2 | E4 E4 E4:2 | E4 G4 C4:1.5 D4:0.5 | E4:4 | F4 F4 F4:1.5 F4:0.5 | F4 E4 E4 E4:0.5 E4:0.5 | G4 G4 F4 D4 | C4:4'},
- {name:'伦敦桥',bpm:112,m:'G4:1.5 A4:0.5 G4 F4 | E4 F4 G4:2 | D4 E4 F4:2 | E4 F4 G4:2 | G4:1.5 A4:0.5 G4 F4 | E4 F4 G4:2 | D4:2 G4:2 | E4 C4:3'},
- {name:'划船歌',bpm:96,m:'C4:1.5 C4:1.5 | C4 D4:0.5 E4:1.5 | E4 D4:0.5 E4 F4:0.5 | G4:3 | C5:0.5 C5:0.5 C5:0.5 G4:0.5 G4:0.5 G4:0.5 | E4:0.5 E4:0.5 E4:0.5 C4:0.5 C4:0.5 C4:0.5 | G4 F4:0.5 E4 D4:0.5 | C4:3'},
- {name:'小蜜蜂',bpm:112,m:'G4 E4 E4:2 | F4 D4 D4:2 | C4 D4 E4 F4 | G4 G4 G4:2 | G4 E4 E4:2 | F4 D4 D4:2 | C4 E4 G4 G4 | E4:4 | D4 D4 D4 D4 | D4 E4 F4:2 | E4 E4 E4 E4 | E4 F4 G4:2 | G4 E4 E4:2 | F4 D4 D4:2 | C4 E4 G4 G4 | C4:4'},
- {name:'新年好',bpm:120,m:'C4:0.5 C4:0.5 C4 G3 | E4:0.5 E4:0.5 E4 C4 | C4:0.5 E4:0.5 G4 G4 | F4:0.5 E4:0.5 D4:2 | D4:0.5 E4:0.5 F4 F4 | E4:0.5 D4:0.5 E4 C4 | C4:0.5 E4:0.5 D4 G3 | B3:0.5 D4:0.5 C4:2'},
- {name:'送别',bpm:72,m:'G4 E4:0.5 G4:0.5 C5:2 | A4 C5 G4:2 | G4 C4:0.5 D4:0.5 E4 D4:0.5 C4:0.5 | D4:4 | G4 E4:0.5 G4:0.5 C5:1.5 B4:0.5 | A4 C5 G4:2 | G4 D4:0.5 E4:0.5 F4:1.5 B3:0.5 | C4:4 | A4 C5 C5:2 | B4 A4:0.5 B4:0.5 C5:2 | A4:0.5 B4:0.5 C5:0.5 A4:0.5 A4:0.5 G4:0.5 E4:0.5 C4:0.5 | D4:4 | G4 E4:0.5 G4:0.5 C5:1.5 B4:0.5 | A4 C5 G4:2 | G4 D4:0.5 E4:0.5 F4:1.5 B3:0.5 | C4:4'},
- {name:'友谊地久天长',bpm:80,m:'G3 | C4:1.5 C4:0.5 C4 E4 | D4:1.5 C4:0.5 D4 E4 | C4:1.5 C4:0.5 E4 G4 | A4:3 A4 | G4:1.5 E4:0.5 E4 C4 | D4:1.5 C4:0.5 D4 E4 | C4:1.5 A3:0.5 A3 G3 | C4:3'},
- {name:'平安夜',bpm:84,m:'G4:1.5 A4:0.5 G4 | E4:3 | G4:1.5 A4:0.5 G4 | E4:3 | D5:2 D5 | B4:3 | C5:2 C5 | G4:3 | A4:2 A4 | C5:1.5 B4:0.5 A4 | G4:1.5 A4:0.5 G4 | E4:3 | A4:2 A4 | C5:1.5 B4:0.5 A4 | G4:1.5 A4:0.5 G4 | E4:3 | D5:2 D5 | F5:1.5 D5:0.5 B4 | C5:3 | E5:3 | C5 G4 E4 | G4:1.5 F4:0.5 D4 | C4:3'},
- {name:'祝你圣诞快乐',bpm:132,m:'G3 | C4 C4:0.5 D4:0.5 C4:0.5 B3:0.5 | A3 A3 A3 | D4 D4:0.5 E4:0.5 D4:0.5 C4:0.5 | B3 G3 G3 | E4 E4:0.5 F4:0.5 E4:0.5 D4:0.5 | C4 A3 G3:0.5 G3:0.5 | A3 D4 B3 | C4:2'},
- {name:'绿袖子',bpm:100,m:'A4 | C5:2 D5 | E5:1.5 F5:0.5 E5 | D5:2 B4 | G4:1.5 A4:0.5 B4 | C5:2 A4 | A4:1.5 G#4:0.5 A4 | B4:2 G#4 | E4:2 A4 | C5:2 D5 | E5:1.5 F5:0.5 E5 | D5:2 B4 | G4:1.5 A4:0.5 B4 | C5:1.5 B4:0.5 A4 | G#4:1.5 F#4:0.5 G#4 | A4:3'},
- {name:'G大调小步舞曲',bpm:110,m:'D5 G4:0.5 A4:0.5 B4:0.5 C5:0.5 | D5 G4 G4 | E5 C5:0.5 D5:0.5 E5:0.5 F#5:0.5 | G5 G4 G4 | C5 D5:0.5 C5:0.5 B4:0.5 A4:0.5 | B4 C5:0.5 B4:0.5 A4:0.5 G4:0.5 | F#4 G4:0.5 A4:0.5 B4:0.5 G4:0.5 | A4:3 | D5 G4:0.5 A4:0.5 B4:0.5 C5:0.5 | D5 G4 G4 | E5 C5:0.5 D5:0.5 E5:0.5 F#5:0.5 | G5 G4 G4 | C5 D5:0.5 C5:0.5 B4:0.5 A4:0.5 | B4 C5:0.5 B4:0.5 A4:0.5 G4:0.5 | A4 B4:0.5 A4:0.5 G4:0.5 F#4:0.5 | G4:3'},
- {name:'勃拉姆斯摇篮曲',bpm:96,m:'E4:0.5 E4:0.5 | G4:2 E4:0.5 E4:0.5 | G4:2 E4:0.5 G4:0.5 | C5 B4:1.5 A4:0.5 | A4 G4 D4:0.5 E4:0.5 | F4 D4 D4:0.5 E4:0.5 | F4:2 D4:0.5 F4:0.5 | B4:0.5 A4:0.5 G4 B4 | C5:3 | C4:0.5 C4:0.5 C5:2 | A4:0.5 F4:0.5 G4:2 | E4:0.5 C4:0.5 F4 G4 | A4 G4:2 | C4:0.5 C4:0.5 C5:2 | A4:0.5 F4:0.5 G4:2 | E4:0.5 C4:0.5 F4 E4 | D4 C4:2'},
- {name:'茉莉花',bpm:76,m:'E4 E4:0.5 G4:0.5 A4:0.5 C5:0.5 C5:0.5 A4:0.5 | G4 G4:0.5 A4:0.5 G4:2 | E4 E4:0.5 G4:0.5 A4:0.5 C5:0.5 C5:0.5 A4:0.5 | G4 G4:0.5 A4:0.5 G4:2 | G4 G4 G4 E4:0.5 G4:0.5 | A4 A4 G4:2 | E4 D4:0.5 E4:0.5 G4 E4:0.5 D4:0.5 | C4 C4:0.5 D4:0.5 C4:2'},
- {name:'致爱丽丝（开头）',bpm:66,m:'E5:0.25 D#5:0.25 | E5:0.25 D#5:0.25 E5:0.25 B4:0.25 D5:0.25 C5:0.25 | A4:0.5 R:0.25 C4:0.25 E4:0.25 A4:0.25 | B4:0.5 R:0.25 E4:0.25 G#4:0.25 B4:0.25 | C5:0.5 R:0.25 E4:0.25 E5:0.25 D#5:0.25 | E5:0.25 D#5:0.25 E5:0.25 B4:0.25 D5:0.25 C5:0.25 | A4:0.5 R:0.25 C4:0.25 E4:0.25 A4:0.25 | B4:0.5 R:0.25 E4:0.25 C5:0.25 B4:0.25 | A4:1'},
- {name:'老麦克唐纳有块地',bpm:120,m:'G4 G4 G4 D4 | E4 E4 D4:2 | B4 B4 A4 A4 | G4:3 D4 | G4 G4 G4 D4 | E4 E4 D4:2 | B4 B4 A4 A4 | G4:3 D4:0.5 D4:0.5 | G4 G4 G4 D4:0.5 D4:0.5 | G4 G4 G4:2 | G4:0.5 G4:0.5 G4 G4:0.5 G4:0.5 G4 | G4:0.5 G4:0.5 G4:0.5 G4:0.5 G4 G4 | G4 G4 G4 D4 | E4 E4 D4:2 | B4 B4 A4 A4 | G4:4'}
-];
+ {cat:K1,name:'致爱丽丝（简化）',bpm:72,ts:1.5,parts:[
+   {h:'R',m:'E5:0.25 D#5:0.25 | '+FE_A+' A4:0.5 R:0.5 E5:0.25 D#5:0.25 | '+FE_A+' A4:0.5 R:0.25 B4:0.25 C5:0.25 D5:0.25 | E5:0.75 G4:0.25 F5:0.25 E5:0.25 | D5:0.75 F4:0.25 E5:0.25 D5:0.25 | C5:0.75 E4:0.25 D5:0.25 C5:0.25 | B4:0.5 R:0.5 E5:0.25 D#5:0.25 | '+FE_A+' A4:1.5'},
+   {h:'L',m:'R:0.5 | '+FE_AL+' A2:0.25 E3:0.25 A3:0.25 R:0.75 | '+FE_AL+' A2:0.25 E3:0.25 A3:0.25 R:0.75 | C3:0.25 G3:0.25 C4:0.25 R:0.75 | G2:0.25 G3:0.25 B3:0.25 R:0.75 | A2:0.25 E3:0.25 A3:0.25 R:0.75 | E2:0.25 E3:0.25 G#3:0.25 R:0.75 | '+FE_AL+' A2:0.25 E3:0.25 A3:1'}]},
+ {cat:K1,name:'卡农（简易版）',bpm:76,ts:4,parts:[
+   {h:'R',m:'F#5:2 E5:2 | D5:2 C#5:2 | B4:2 A4:2 | B4:2 C#5:2 | D5:2 C#5:2 | B4:2 A4:2 | G4:2 F#4:2 | G4:2 E4:2 | D4 F#4 A4 G4 | F#4 D4 F#4 E4 | D4 B3 D4 A4 | G4 B4 A4 G4 | F#5 D5 E5 C#5 | D5 F#5 A5 A4 | B4 G4 A4 F#4 | D4 D5 D5:1.5 C#5:0.5 | D5+F#5:2 C#5+E5:2 | B4+D5:2 A4+C#5:2 | G4+B4:2 F#4+A4:2 | G4+B4:2 A4+C#5:2 | F#4+A4+D5:4'},
+   {h:'L',m:CANON_L+' '+CANON_L+' '+CANON_L+' '+CANON_L+' '+CANON_L+' @D:4'}]},
+ {cat:K1,name:'巴赫 C大调前奏曲（前19小节）',bpm:66,ts:4,parts:[
+   {h:'R',m:BWV.map(c=>bwvHalf(c)+' '+bwvHalf(c)).join(' | ')+' | E4+G4+C5:4'},
+   {h:'L',m:BWV.map(c=>c[0]+':2 '+c[0]+':2').join(' | ')+' | C2:4'},
+   {h:'L',m:BWV.map(c=>'R:0.25 '+c[1]+':1.75 R:0.25 '+c[1]+':1.75').join(' | ')+' | C3:4'}]},
+ {cat:K1,name:'土耳其进行曲（主题）',bpm:112,ts:2,parts:[
+   {h:'R',m:'B4:0.25 A4:0.25 G#4:0.25 A4:0.25 | '+TM+' A4:1 B4:0.25 A4:0.25 G#4:0.25 A4:0.25 | '+TM+' A4:2'},
+   {h:'L',m:'R:1 | '+TML+' @Am:1 R:1 | '+TML+' @Am:2'}]},
+ {cat:K1,name:'欢乐颂',bpm:108,ts:4,parts:[
+   {h:'R',m:'E4 E4 F4 G4 | G4 F4 E4 D4 | C4 C4 D4 E4 | E4:1.5 D4:0.5 D4:2 | E4 E4 F4 G4 | G4 F4 E4 D4 | C4 C4 D4 E4 | D4:1.5 C4:0.5 C4:2 | D4 D4 E4 C4 | D4 E4:0.5 F4:0.5 E4 C4 | D4 E4:0.5 F4:0.5 E4 D4 | C4 D4 G3:2 | E4 E4 F4 G4 | G4 F4 E4 D4 | C4 C4 D4 E4 | D4:1.5 C4:0.5 C4:2'},
+   {h:'L',m:'@C:4 | @G:4 | @C:4 | @C:2 @G:2 | @C:4 | @G:4 | @C:4 | @G:2 @C:2 | @G:2 @C:2 | @G:2 @C:2 | @G:2 @C:2 | @C:2 @G:2 | @C:4 | @G:4 | @C:4 | @G:2 @C:2'}]},
+ {cat:K1,name:'G大调小步舞曲',bpm:110,ts:3,parts:[
+   {h:'R',m:'D5 G4:0.5 A4:0.5 B4:0.5 C5:0.5 | D5 G4 G4 | E5 C5:0.5 D5:0.5 E5:0.5 F#5:0.5 | G5 G4 G4 | C5 D5:0.5 C5:0.5 B4:0.5 A4:0.5 | B4 C5:0.5 B4:0.5 A4:0.5 G4:0.5 | F#4 G4:0.5 A4:0.5 B4:0.5 G4:0.5 | A4:3 | D5 G4:0.5 A4:0.5 B4:0.5 C5:0.5 | D5 G4 G4 | E5 C5:0.5 D5:0.5 E5:0.5 F#5:0.5 | G5 G4 G4 | C5 D5:0.5 C5:0.5 B4:0.5 A4:0.5 | B4 C5:0.5 B4:0.5 A4:0.5 G4:0.5 | A4 B4:0.5 A4:0.5 G4:0.5 F#4:0.5 | G4:3'},
+   {h:'L',m:'@G:3 | @G:3 | @C:3 | @G:3 | @C:3 | @G:3 | @D:3 | @D:3 | @G:3 | @G:3 | @C:3 | @G:3 | @C:3 | @G:3 | @D:3 | @G:3'}]},
+ {cat:K1,name:'勃拉姆斯摇篮曲',bpm:96,ts:3,parts:[
+   {h:'R',m:'E4:0.5 E4:0.5 | G4:2 E4:0.5 E4:0.5 | G4:2 E4:0.5 G4:0.5 | C5 B4:1.5 A4:0.5 | A4 G4 D4:0.5 E4:0.5 | F4 D4 D4:0.5 E4:0.5 | F4:2 D4:0.5 F4:0.5 | B4:0.5 A4:0.5 G4 B4 | C5:2 C4:0.5 C4:0.5 | C5:2 A4:0.5 F4:0.5 | G4:2 E4:0.5 C4:0.5 | F4 G4 A4 | G4:2 C4:0.5 C4:0.5 | C5:2 A4:0.5 F4:0.5 | G4:2 E4:0.5 C4:0.5 | F4 E4 D4 | C4:2'},
+   {h:'L',m:'R:1 | @C:3 | @C:3 | @C:1 @G:2 | @G:3 | @G:3 | @G:3 | @G:3 | @C:3 | @F:3 | @C:3 | @F:3 | @C:3 | @F:3 | @C:3 | @G:3 | @C:2'}]},
+ {cat:K1,name:'念故乡（自新大陆）',bpm:56,ts:4,parts:[
+   {h:'R',m:'E4 G4 G4:2 | E4 D4 C4:2 | D4 E4 G4 E4 | D4:4 | E4 G4 G4:2 | E4 D4 C4:2 | D4 E4 D4 C4 | C4:4'},
+   {h:'L',m:'@C:4 | @C:1 @G:1 @C:2 | @G:2 @C:2 | @G:4 | @C:4 | @C:1 @G:1 @C:2 | @G:4 | @C:4'}]},
+ {cat:K1,name:'绿袖子',bpm:100,ts:3,parts:[
+   {h:'R',m:'A4 | C5:2 D5 | E5:1.5 F5:0.5 E5 | D5:2 B4 | G4:1.5 A4:0.5 B4 | C5:2 A4 | A4:1.5 G#4:0.5 A4 | B4:2 G#4 | E4:2 A4 | C5:2 D5 | E5:1.5 F5:0.5 E5 | D5:2 B4 | G4:1.5 A4:0.5 B4 | C5:1.5 B4:0.5 A4 | G#4:1.5 F#4:0.5 G#4 | A4:3'},
+   {h:'L',m:'R:1 | @Am:3 | @C:3 | @G:3 | @Em:3 | @Am:3 | @E:3 | @E:3 | @E:2 @Am:1 | @Am:3 | @C:3 | @G:3 | @Em:3 | @Am:3 | @E:3 | @Am:3'}]},
+ {cat:K1,name:'奇异恩典',bpm:80,ts:3,parts:[
+   {h:'R',m:'G3 | C4:2 E4:0.5 C4:0.5 | E4:2 D4 | C4:2 A3 | G3:2 G3 | C4:2 E4:0.5 C4:0.5 | E4:2 D4 | G4:2 E4 | G4:2 E4:0.5 C4:0.5 | E4:2 D4 | C4:2 A3 | G3:2 G3 | C4:2 E4:0.5 C4:0.5 | E4:2 D4 | C4:3'},
+   {h:'L',m:'R:1 | @C:3 | @C:3 | @F:3 | @C:3 | @C:3 | @G:3 | @G:2 @C:1 | @C:3 | @C:3 | @F:3 | @C:3 | @C:3 | @G:3 | @C:3'}]},
+ {cat:K1,name:'平安夜',bpm:84,ts:3,parts:[
+   {h:'R',m:'G4:1.5 A4:0.5 G4 | E4:3 | G4:1.5 A4:0.5 G4 | E4:3 | D5:2 D5 | B4:3 | C5:2 C5 | G4:3 | A4:2 A4 | C5:1.5 B4:0.5 A4 | G4:1.5 A4:0.5 G4 | E4:3 | A4:2 A4 | C5:1.5 B4:0.5 A4 | G4:1.5 A4:0.5 G4 | E4:3 | D5:2 D5 | F5:1.5 D5:0.5 B4 | C5:3 | E5:3 | C5 G4 E4 | G4:1.5 F4:0.5 D4 | C4:3'},
+   {h:'L',m:'@C:3 | @C:3 | @C:3 | @C:3 | @G:3 | @G:3 | @C:3 | @C:3 | @F:3 | @F:3 | @C:3 | @C:3 | @F:3 | @F:3 | @C:3 | @C:3 | @G:3 | @G:3 | @C:3 | @C:3 | @C:3 | @G:3 | @C:3'}]},
 
+ {cat:K2,name:'小星星',bpm:100,ts:4,parts:[
+   {h:'R',m:'C4 C4 G4 G4 | A4 A4 G4:2 | F4 F4 E4 E4 | D4 D4 C4:2 | G4 G4 F4 F4 | E4 E4 D4:2 | G4 G4 F4 F4 | E4 E4 D4:2 | C4 C4 G4 G4 | A4 A4 G4:2 | F4 F4 E4 E4 | D4 D4 C4:2'},
+   {h:'L',m:'@C:4 | @F:2 @C:2 | @F:2 @C:2 | @G:2 @C:2 | @C:2 @F:2 | @C:2 @G:2 | @C:2 @F:2 | @C:2 @G:2 | @C:4 | @F:2 @C:2 | @F:2 @C:2 | @G:2 @C:2'}]},
+ {cat:K2,name:'玛丽有只小羊羔',bpm:110,ts:4,parts:[
+   {h:'R',m:'E4 D4 C4 D4 | E4 E4 E4:2 | D4 D4 D4:2 | E4 G4 G4:2 | E4 D4 C4 D4 | E4 E4 E4 E4 | D4 D4 E4 D4 | C4:4'},
+   {h:'L',m:'@C:4 | @C:4 | @G:4 | @C:4 | @C:4 | @C:4 | @G:4 | @C:4'}]},
+ {cat:K2,name:'两只老虎',bpm:120,ts:4,parts:[
+   {h:'R',m:'C4 D4 E4 C4 | C4 D4 E4 C4 | E4 F4 G4:2 | E4 F4 G4:2 | G4:0.5 A4:0.5 G4:0.5 F4:0.5 E4 C4 | G4:0.5 A4:0.5 G4:0.5 F4:0.5 E4 C4 | C4 G3 C4:2 | C4 G3 C4:2'},
+   {h:'L',m:'@C:4 | @C:4 | @C:4 | @C:4 | @C:4 | @C:4 | @C:1 @G:1 @C:2 | @C:1 @G:1 @C:2'}]},
+ {cat:K2,name:'生日快乐',bpm:100,ts:3,parts:[
+   {h:'R',m:'G3:0.75 G3:0.25 | A3 G3 C4 | B3:2 G3:0.75 G3:0.25 | A3 G3 D4 | C4:2 G3:0.75 G3:0.25 | G4 E4 C4 | B3 A3 F4:0.75 F4:0.25 | E4 C4 D4 | C4:3'},
+   {h:'L',m:'R:1 | @C:3 | @G:3 | @G:3 | @C:3 | @C:3 | @F:3 | @C:2 @G:1 | @C:3'}]},
+ {cat:K2,name:'铃儿响叮当',bpm:120,ts:4,parts:[
+   {h:'R',m:'E4 E4 E4:2 | E4 E4 E4:2 | E4 G4 C4:1.5 D4:0.5 | E4:4 | F4 F4 F4:1.5 F4:0.5 | F4 E4 E4 E4:0.5 E4:0.5 | E4 D4 D4 E4 | D4:2 G4:2 | E4 E4 E4:2 | E4 E4 E4:2 | E4 G4 C4:1.5 D4:0.5 | E4:4 | F4 F4 F4:1.5 F4:0.5 | F4 E4 E4 E4:0.5 E4:0.5 | G4 G4 F4 D4 | C4:4'},
+   {h:'L',m:'@C:4 | @C:4 | @C:4 | @C:4 | @F:4 | @C:4 | @G:4 | @G:4 | @C:4 | @C:4 | @C:4 | @C:4 | @F:4 | @C:4 | @G:4 | @C:4'}]},
+ {cat:K2,name:'伦敦桥',bpm:112,ts:4,parts:[
+   {h:'R',m:'G4:1.5 A4:0.5 G4 F4 | E4 F4 G4:2 | D4 E4 F4:2 | E4 F4 G4:2 | G4:1.5 A4:0.5 G4 F4 | E4 F4 G4:2 | D4:2 G4:2 | E4 C4:3'},
+   {h:'L',m:'@C:4 | @C:4 | @G:4 | @C:4 | @C:4 | @C:4 | @G:4 | @C:4'}]},
+ {cat:K2,name:'划船歌',bpm:96,ts:3,parts:[
+   {h:'R',m:'C4:1.5 C4:1.5 | C4 D4:0.5 E4:1.5 | E4 D4:0.5 E4 F4:0.5 | G4:3 | C5:0.5 C5:0.5 C5:0.5 G4:0.5 G4:0.5 G4:0.5 | E4:0.5 E4:0.5 E4:0.5 C4:0.5 C4:0.5 C4:0.5 | G4 F4:0.5 E4 D4:0.5 | C4:3'},
+   {h:'L',m:'@C:3 | @C:3 | @C:3 | @C:3 | @C:3 | @C:3 | @G:3 | @C:3'}]},
+ {cat:K2,name:'小蜜蜂',bpm:112,ts:4,parts:[
+   {h:'R',m:'G4 E4 E4:2 | F4 D4 D4:2 | C4 D4 E4 F4 | G4 G4 G4:2 | G4 E4 E4:2 | F4 D4 D4:2 | C4 E4 G4 G4 | E4:4 | D4 D4 D4 D4 | D4 E4 F4:2 | E4 E4 E4 E4 | E4 F4 G4:2 | G4 E4 E4:2 | F4 D4 D4:2 | C4 E4 G4 G4 | C4:4'},
+   {h:'L',m:'@C:4 | @G:4 | @C:4 | @C:4 | @C:4 | @G:4 | @C:4 | @C:4 | @G:4 | @G:4 | @C:4 | @C:4 | @C:4 | @G:4 | @C:4 | @C:4'}]},
+ {cat:K2,name:'新年好',bpm:120,ts:3,parts:[
+   {h:'R',m:'C4:0.5 C4:0.5 C4 G3 | E4:0.5 E4:0.5 E4 C4 | C4:0.5 E4:0.5 G4 G4 | F4:0.5 E4:0.5 D4:2 | D4:0.5 E4:0.5 F4 F4 | E4:0.5 D4:0.5 E4 C4 | C4:0.5 E4:0.5 D4 G3 | B3:0.5 D4:0.5 C4:2'},
+   {h:'L',m:'@C:3 | @C:3 | @C:3 | @G:3 | @G:3 | @C:3 | @G:3 | @G:1 @C:2'}]},
+ {cat:K2,name:'送别',bpm:72,ts:4,parts:[
+   {h:'R',m:'G4 E4:0.5 G4:0.5 C5:2 | A4 C5 G4:2 | G4 C4:0.5 D4:0.5 E4 D4:0.5 C4:0.5 | D4:4 | G4 E4:0.5 G4:0.5 C5:1.5 B4:0.5 | A4 C5 G4:2 | G4 D4:0.5 E4:0.5 F4:1.5 B3:0.5 | C4:4 | A4 C5 C5:2 | B4 A4:0.5 B4:0.5 C5:2 | A4:0.5 B4:0.5 C5:0.5 A4:0.5 A4:0.5 G4:0.5 E4:0.5 C4:0.5 | D4:4 | G4 E4:0.5 G4:0.5 C5:1.5 B4:0.5 | A4 C5 G4:2 | G4 D4:0.5 E4:0.5 F4:1.5 B3:0.5 | C4:4'},
+   {h:'L',m:'@C:4 | @F:2 @C:2 | @C:4 | @G:4 | @C:4 | @F:2 @C:2 | @G:4 | @C:4 | @F:4 | @G:2 @C:2 | @F:2 @C:2 | @G:4 | @C:4 | @F:2 @C:2 | @G:4 | @C:4'}]},
+ {cat:K2,name:'友谊地久天长',bpm:80,ts:4,parts:[
+   {h:'R',m:'G3 | C4:1.5 C4:0.5 C4 E4 | D4:1.5 C4:0.5 D4 E4 | C4:1.5 C4:0.5 E4 G4 | A4:3 A4 | G4:1.5 E4:0.5 E4 C4 | D4:1.5 C4:0.5 D4 E4 | C4:1.5 A3:0.5 A3 G3 | C4:3'},
+   {h:'L',m:'R:1 | @C:4 | @G:4 | @C:4 | @F:4 | @C:4 | @G:4 | @F:2 @G:2 | @C:3'}]},
+ {cat:K2,name:'祝你圣诞快乐',bpm:132,ts:3,parts:[
+   {h:'R',m:'G3 | C4 C4:0.5 D4:0.5 C4:0.5 B3:0.5 | A3 A3 A3 | D4 D4:0.5 E4:0.5 D4:0.5 C4:0.5 | B3 G3 G3 | E4 E4:0.5 F4:0.5 E4:0.5 D4:0.5 | C4 A3 G3:0.5 G3:0.5 | A3 D4 B3 | C4:2'},
+   {h:'L',m:'R:1 | @C:3 | @F:3 | @D:3 | @G:3 | @Am:3 | @F:3 | @G:3 | @C:2'}]},
+ {cat:K2,name:'茉莉花',bpm:76,ts:4,parts:[
+   {h:'R',m:'E4 E4:0.5 G4:0.5 A4:0.5 C5:0.5 C5:0.5 A4:0.5 | G4 G4:0.5 A4:0.5 G4:2 | E4 E4:0.5 G4:0.5 A4:0.5 C5:0.5 C5:0.5 A4:0.5 | G4 G4:0.5 A4:0.5 G4:2 | G4 G4 G4 E4:0.5 G4:0.5 | A4 A4 G4:2 | E4 D4:0.5 E4:0.5 G4 E4:0.5 D4:0.5 | C4 C4:0.5 D4:0.5 C4:2'},
+   {h:'L',m:'@C:2 @F:2 | @C:4 | @C:2 @F:2 | @C:4 | @C:4 | @F:2 @C:2 | @C:2 @G:2 | @C:4'}]},
+ {cat:K2,name:'老麦克唐纳有块地',bpm:120,ts:4,parts:[
+   {h:'R',m:'G4 G4 G4 D4 | E4 E4 D4:2 | B4 B4 A4 A4 | G4:3 D4 | G4 G4 G4 D4 | E4 E4 D4:2 | B4 B4 A4 A4 | G4:3 D4:0.5 D4:0.5 | G4 G4 G4 D4:0.5 D4:0.5 | G4 G4 G4:2 | G4:0.5 G4:0.5 G4 G4:0.5 G4:0.5 G4 | G4:0.5 G4:0.5 G4:0.5 G4:0.5 G4 G4 | G4 G4 G4 D4 | E4 E4 D4:2 | B4 B4 A4 A4 | G4:4'},
+   {h:'L',m:'@G:4 | @C:2 @G:2 | @G:2 @D:2 | @G:4 | @G:4 | @C:2 @G:2 | @G:2 @D:2 | @G:4 | @G:4 | @G:4 | @G:4 | @G:4 | @G:4 | @C:2 @G:2 | @G:2 @D:2 | @G:4'}]}
+];
+/*SONGS-END*/
+
+const PC={C:0,D:2,E:4,F:5,G:7,A:9,B:11};
 function noteNum(s){
   const m=/^([A-G])(#|b)?(-?\d)$/.exec(s); if(!m)throw new Error('bad note '+s);
-  return 12*(+m[3]+1)+{C:0,D:2,E:4,F:5,G:7,A:9,B:11}[m[1]]+(m[2]==='#'?1:m[2]==='b'?-1:0);
+  return 12*(+m[3]+1)+PC[m[1]]+(m[2]==='#'?1:m[2]==='b'?-1:0);
+}
+function chordNotes(name){
+  const m=/^([A-G])(#|b)?(m)?$/.exec(name); if(!m)throw new Error('bad chord '+name);
+  const pc=((PC[m[1]]+(m[2]==='#'?1:m[2]==='b'?-1:0))%12+12)%12;
+  const root=40+((pc-4+12)%12);           // root between E2 and D#3
+  return [root,root+(m[3]?3:4),root+7];
+}
+function parseTok(tok){
+  const i=tok.lastIndexOf(':'); const p=i>0?tok.slice(0,i):tok; const beats=i>0?+tok.slice(i+1):1;
+  const notes=p==='R'?[]:p[0]==='@'?chordNotes(p.slice(1)):p.split('+').map(noteNum);
+  return {notes,beats};
 }
 function buildSong(def){
-  const q=60000/def.bpm; let t=0; const ev=[{t:0,msg:[0xC0,0]}];
-  for(const tok of def.m.trim().split(/\s+/)){
-    if(tok==='|')continue;
-    const [p,d]=tok.split(':'); const beats=d?+d:1;
-    if(p!=='R'){ const n=noteNum(p); ev.push({t,msg:[0x90,n,90]},{t:t+beats*q*0.9,msg:[0x80,n,0]}); }
-    t+=beats*q;
-  }
-  ev.sort((a,b)=>a.t-b.t);
-  return finish({events:ev,duration:t,tracks:1});
+  const q=60000/def.bpm; const ev=[{t:0,msg:[0xC0,0]},{t:0,msg:[0xC1,0]}]; let dur=0;
+  def.parts.forEach(pt=>{
+    const ch=pt.h==='L'?1:0, vel=pt.h==='L'?64:90; let t=0;
+    for(const tok of pt.m.trim().split(/\s+/)){
+      if(tok==='|'||!tok)continue;
+      const {notes,beats}=parseTok(tok);
+      notes.forEach(n=>{ ev.push({t,msg:[0x90|ch,n,vel],h:pt.h},{t:t+beats*q*0.92,msg:[0x80|ch,n,0],h:pt.h}); });
+      t+=beats*q;
+    }
+    dur=Math.max(dur,t);
+  });
+  const rank=e=>((e.msg[0]&0xF0)===0x80)?0:1;
+  ev.sort((a,b)=>a.t-b.t||rank(a)-rank(b));
+  return finish({events:ev,duration:dur,tracks:def.parts.length});
 }
 
 /* ---------- MIDI file parser ---------- */
@@ -216,7 +348,7 @@ function parseMidi(buf){
   if(len<14||str(0,4)!=='MThd') throw new Error('这不是有效的 MIDI 文件');
   const hlen=d.getUint32(4), ntrks=d.getUint16(10), div=d.getUint16(12);
   p=8+hlen;
-  const raw=[]; let seq=0, tracks=0;
+  const raw=[], names={}; let seq=0, tracks=0;
   for(let t=0;t<ntrks&&p+8<=len;t++){
     const id=str(p,4), tlen=d.getUint32(p+4); p+=8;
     const end=Math.min(p+tlen,len);
@@ -231,13 +363,14 @@ function parseMidi(buf){
       if(st===0xFF){
         const type=d.getUint8(p++); const l=vlq();
         if(type===0x51&&l===3) raw.push({tick,seq:seq++,tempo:(d.getUint8(p)<<16)|(d.getUint8(p+1)<<8)|d.getUint8(p+2)});
+        if(type===0x03&&p+l<=end) names[t]=str(p,l);
         p+=l; if(type===0x2F)break;
       }else if(st===0xF0||st===0xF7){ const l=vlq(); p+=l; }
       else{
         rs=st; const hi=st&0xF0; const n=(hi===0xC0||hi===0xD0)?1:2;
         if(p+n>end)break;
         const m=[st]; for(let i=0;i<n;i++)m.push(d.getUint8(p++)&0x7f);
-        raw.push({tick,seq:seq++,msg:m});
+        raw.push({tick,seq:seq++,msg:m,trk:t});
       }
     }
     p=end;
@@ -249,12 +382,12 @@ function parseMidi(buf){
   for(const e of raw){
     ms+=(e.tick-last)*(smpte?msPerTickSmpte:tempo/div/1000); last=e.tick;
     if(e.tempo){tempo=e.tempo;continue}
-    events.push({t:ms,msg:e.msg});
+    events.push({t:ms,msg:e.msg,trk:e.trk});
   }
-  return finish({events,duration:ms,tracks});
+  return finish({events,duration:ms,tracks,trackNames:names});
 }
 
-/* pair note-on/off into notes for drawing and learning */
+/* pair note-on/off into notes, then decide which hand plays each note */
 function finish(s){
   const open=new Map(), notes=[];
   for(const e of s.events){
@@ -262,34 +395,188 @@ function finish(s){
     if(hi!==0x80&&hi!==0x90)continue;
     const key=ch*128+m[1];
     if(hi===0x90&&m[2]>0){
-      const nt={t:e.t,dur:0,n:m[1],ch,drum:ch===9};
+      const nt={t:e.t,dur:0,n:m[1],ch,trk:e.trk||0,drum:ch===9,h:e.h||null,f:0,on:e,off:null};
       notes.push(nt); if(!open.has(key))open.set(key,[]); open.get(key).push(nt);
     }else{
-      const q=open.get(key); if(q&&q.length){ const nt=q.shift(); nt.dur=Math.max(30,e.t-nt.t); }
+      const q=open.get(key); if(q&&q.length){ const nt=q.shift(); nt.dur=Math.max(30,e.t-nt.t); nt.off=e; }
     }
   }
   open.forEach(q=>q.forEach(nt=>nt.dur=Math.max(30,s.duration-nt.t)));
-  notes.sort((a,b)=>a.t-b.t);
+  notes.sort((a,b)=>a.t-b.t||a.n-b.n);
+  assignHands(s,notes);
+  notes.forEach(nt=>{ nt.on.h=nt.h; if(nt.off)nt.off.h=nt.h; });
   s.notes=notes; s.noteCount=notes.length;
   s.maxDur=notes.reduce((a,b)=>Math.max(a,b.dur),0);
   return s;
 }
+function assignHands(s,notes){
+  const pn=notes.filter(n=>!n.drum); if(!pn.length)return;
+  if(pn.every(n=>n.h)){ s.handInfo='自带左右手'; return; }
+  const multi=new Set(pn.map(n=>n.trk)).size>1;
+  const vk=n=>multi?'t'+n.trk:'c'+n.ch;
+  const stats=new Map();
+  pn.forEach(n=>{ const k=vk(n); const st=stats.get(k)||{k,sum:0,c:0}; st.sum+=n.n; st.c++; stats.set(k,st); });
+  const names=s.trackNames||{}, byName={};
+  stats.forEach(st=>{ if(st.k[0]!=='t')return; const nm=(names[+st.k.slice(1)]||'').toLowerCase();
+    if(/right|rechts|\brh\b|右|treble|upper|primo/.test(nm))byName[st.k]='R';
+    else if(/left|links|\blh\b|左|bass|lower|secondo/.test(nm))byName[st.k]='L'; });
+  const vs=[...stats.values()].filter(st=>st.c>=4).sort((a,b)=>b.sum/b.c-a.sum/a.c);
+  let map=null;
+  if(Object.keys(byName).length)map=byName;
+  else if(vs.length===2&&vs[0].sum/vs[0].c-vs[1].sum/vs[1].c>3)map={[vs[0].k]:'R',[vs[1].k]:'L'};
+  if(map){
+    const rest=pn.filter(n=>!map[vk(n)]); pn.forEach(n=>{ if(map[vk(n)])n.h=map[vk(n)]; });
+    if(rest.length)splitByPitch(rest);
+    s.handInfo='按音轨分左右手';
+  } else { splitByPitch(pn); s.handInfo='按音高自动分左右手'; }
+}
+function splitByPitch(pn){
+  let rc=67, lc=48, i=0;
+  while(i<pn.length){
+    let j=i; const g=[]; while(j<pn.length&&pn[j].t-pn[i].t<40){g.push(pn[j]);j++}
+    g.sort((a,b)=>a.n-b.n);
+    let best=0, bc=Infinity;
+    for(let k=0;k<=g.length;k++){
+      let c=0; for(let x=0;x<g.length;x++)c+=Math.abs(g[x].n-(x<k?lc:rc));
+      if(k>0&&g[k-1].n-g[0].n>14)c+=40;
+      if(k<g.length&&g[g.length-1].n-g[k].n>14)c+=40;
+      if(k>5||g.length-k>5)c+=40;
+      if(c<bc){bc=c;best=k}
+    }
+    g.forEach((n,x)=>n.h=x<best?'L':'R');
+    const Lg=g.slice(0,best), Rg=g.slice(best);
+    if(Rg.length)rc=rc*0.6+0.4*Rg.reduce((a,b)=>a+b.n,0)/Rg.length;
+    if(Lg.length)lc=lc*0.6+0.4*Lg.reduce((a,b)=>a+b.n,0)/Lg.length;
+    if(rc-lc<7){ const m=(rc+lc)/2; rc=m+3.5; lc=m-3.5; }
+    i=j;
+  }
+}
+
+/* ---------- fingering: dynamic programming over comfortable finger spans ----------
+   span table (semitones between two fingers of a right hand): minPrac,minComf,minRel,maxRel,maxComf,maxPrac */
+const SPAN={'12':[-5,-3,1,5,8,10],'13':[-4,-2,3,7,10,12],'14':[-3,-1,5,9,12,14],'15':[-1,1,7,10,13,15],
+  '23':[1,1,1,2,3,5],'24':[1,1,3,4,5,7],'25':[2,2,5,6,8,10],'34':[1,1,1,2,2,4],'35':[1,1,3,4,5,7],'45':[1,1,1,2,3,5]};
+const COMBOS=[[]]; for(let k=1;k<=5;k++){ COMBOS[k]=[]; (function rec(st,a){ if(a.length===k){COMBOS[k].push(a.slice());return} for(let f=st;f<=5;f++){a.push(f);rec(f+1,a);a.pop()} })(1,[]); }
+function pairCost(f1,p1,f2,p2){
+  if(f1===f2)return p1===p2?0:6+Math.abs(p2-p1);
+  let a=f1,pa=p1,b=f2,pb=p2; if(a>b){[a,b]=[b,a];[pa,pb]=[pb,pa]}
+  const T=SPAN[''+a+b], s=pb-pa; let c=0;
+  if(s<T[2])c+=T[2]-s; if(s<T[1])c+=2*(T[1]-s); if(s<T[0])c+=10*(T[0]-s);
+  if(s>T[3])c+=s-T[3]; if(s>T[4])c+=2*(s-T[4]); if(s>T[5])c+=10*(s-T[5]);
+  return c;
+}
+const isBlack=n=>[1,3,6,8,10].includes(((n%12)+12)%12);
+function computeFingers(){
+  if(!song)return;
+  song.notes.forEach(n=>n.f=0);
+  ['R','L'].forEach(h=>{
+    const ns=song.notes.filter(n=>!n.drum&&n.h===h);
+    const sign=h==='R'?1:-1;
+    const G=[]; let i=0;
+    while(i<ns.length){
+      let j=i; const g=[]; while(j<ns.length&&ns[j].t-ns[i].t<40){g.push(ns[j]);j++}
+      g.sort((a,b)=>sign*(tp(a)-tp(b)));
+      const use=g.slice(0,5);
+      G.push({notes:use,v:use.map(n=>sign*tp(n)),t:g[0].t,end:Math.max(...g.map(n=>n.t+n.dur))});
+      i=j;
+    }
+    if(!G.length)return;
+    const cand=G.map(g=>COMBOS[g.notes.length]);
+    const local=(g,c)=>{ let x=0; for(let k=0;k<c.length;k++){ const real=tp(g.notes[k]);
+        if(c[k]===1&&isBlack(real))x+=1; if(c[k]===5&&isBlack(real))x+=0.4; if(c[k]===4)x+=0.05; }
+      for(let k=0;k+1<c.length;k++)x+=0.7*pairCost(c[k],g.v[k],c[k+1],g.v[k+1]); return x; };
+    const trans=(ga,ca,gb,cb)=>{
+      let x=pairCost(ca[0],ga.v[0],cb[0],gb.v[0]);
+      if(ca.length>1||cb.length>1){ x=(x+pairCost(ca[ca.length-1],ga.v[ga.v.length-1],cb[cb.length-1],gb.v[gb.v.length-1]))/2; }
+      if(ca.length>1&&cb.length>1)x*=0.2;      // chord to chord: the hand lifts, shape matters more than the move
+      return gb.t-ga.end>500?x*0.25:x; };
+    let cost=cand[0].map(c=>local(G[0],c)); const back=[null];
+    for(let k=1;k<G.length;k++){
+      const nc=[], bk=[];
+      cand[k].forEach((c,ci)=>{ let best=Infinity,bi=0; const lc=local(G[k],c);
+        cand[k-1].forEach((pc,pi)=>{ const v=cost[pi]+trans(G[k-1],pc,G[k],c); if(v<best){best=v;bi=pi} });
+        nc[ci]=best+lc; bk[ci]=bi; });
+      cost=nc; back.push(bk);
+    }
+    let ci=cost.indexOf(Math.min(...cost));
+    for(let k=G.length-1;k>=0;k--){ const c=cand[k][ci]; G[k].notes.forEach((n,x)=>n.f=c[x]); if(k>0)ci=back[k][ci]; }
+  });
+}
+
+/* ---------- built-in piano sound (used when no piano is connected, e.g. on iPad) ---------- */
+const Synth=(function(){
+  let ac=null, master=null, pedal=false; const voices=new Map(), held=new Set();
+  function ensure(){
+    if(!ac){
+      const AC=window.AudioContext||window.webkitAudioContext; if(!AC)return null;
+      try{ if(navigator.audioSession)navigator.audioSession.type='playback'; }catch(e){}
+      ac=new AC();
+      const comp=ac.createDynamicsCompressor(); comp.threshold.value=-16; comp.ratio.value=4;
+      master=ac.createGain(); master.gain.value=0.55; master.connect(comp); comp.connect(ac.destination);
+      try{ const b=ac.createBuffer(1,1,22050), s=ac.createBufferSource(); s.buffer=b; s.connect(ac.destination); s.start(0); }catch(e){}
+    }
+    if(ac.state!=='running'){ try{ ac.resume(); }catch(e){} }
+    return ac;
+  }
+  const tAt=at=>at==null?ac.currentTime:ac.currentTime+Math.max(0,(at-performance.now())/1000);
+  function kill(key,at){
+    const vo=voices.get(key); if(!vo)return; voices.delete(key);
+    const t=tAt(at);
+    try{
+      if(vo.t>t){ vo.os.forEach(o=>o.stop(t)); return; }
+      const tt=Math.max(t,vo.t+0.01);
+      vo.g.gain.cancelScheduledValues(tt); vo.g.gain.setTargetAtTime(0,tt,0.06);
+      vo.os.forEach(o=>{ try{o.stop(tt+0.5)}catch(e){} });
+    }catch(e){}
+  }
+  function on(ch,n,vel,at){
+    if(!ensure())return; const key=ch*128+n; held.delete(key); kill(key,at);
+    const t=tAt(at), f=440*Math.pow(2,(n-69)/12), v=Math.pow(vel/127,1.3)*0.3;
+    const g=ac.createGain(); g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(v,t+0.005);
+    const tau=Math.max(0.35,1.6-(n-48)*0.025);
+    g.gain.setTargetAtTime(v*0.4,t+0.006,0.09); g.gain.setTargetAtTime(0,t+0.25,tau);
+    const lp=ac.createBiquadFilter(); lp.type='lowpass'; lp.Q.value=0.5;
+    lp.frequency.setValueAtTime(Math.min(9000,f*8+vel*25),t); lp.frequency.setTargetAtTime(Math.min(4500,f*3+700),t,0.3);
+    const mk=(type,mul,gain)=>{ const o=ac.createOscillator(); o.type=type; o.frequency.value=f*mul; const gg=ac.createGain(); gg.gain.value=gain; o.connect(gg); gg.connect(lp); return o; };
+    const os=[mk('triangle',1,1),mk('sine',2,0.35),mk('sine',3.01,n<60?0.18:0.07)];
+    lp.connect(g); g.connect(master);
+    const end=t+tau*6+0.5; os.forEach(o=>{ o.start(t); o.stop(end); });
+    const vo={g,os,t}; voices.set(key,vo);
+    os[0].onended=()=>{ if(voices.get(key)===vo)voices.delete(key); try{g.disconnect()}catch(e){} };
+    if(voices.size>64)kill(voices.keys().next().value,null);
+  }
+  function off(ch,n,at){ const key=ch*128+n; if(pedal){held.add(key);return} kill(key,at); }
+  function handle(m,at){
+    if(!ac&&!ensure())return;
+    const hi=m[0]&0xF0, ch=m[0]&15; if(ch===9)return;
+    if(hi===0x90&&m[2]>0)on(ch,m[1],m[2],at);
+    else if(hi===0x80||hi===0x90)off(ch,m[1],at);
+    else if(hi===0xB0){
+      if(m[1]===64){ const down=m[2]>=64; if(pedal&&!down){ pedal=false; held.forEach(k=>kill(k,at)); held.clear(); } else pedal=down; }
+      else if(m[1]===120||m[1]===123)allOff();
+    }
+  }
+  function allOff(){ pedal=false; held.clear(); [...voices.keys()].forEach(k=>kill(k,null)); }
+  return {ensure,handle,allOff};
+})();
 
 /* ---------- state ---------- */
-let midi=null, out=null, song=null, songName='';
+let midi=null, out=null, song=null, songName='', cur=0;
 let playing=false, idx=0, anchorPerf=0, anchorPos=0, pausePos=0, speed=1, transpose=0;
 let timer=0, wakeLock=null, dragging=false;
-const active=new Set();            // notes sent to device and still sounding
-const pressed=new Set();           // keys the player is holding (piano or screen)
-const wrong=new Map();             // key -> time of a wrong press
-let stageOpen=false, mode='play', topOnly=true;
+const active=new Set(), pressed=new Set(), wrong=new Map();
+let stageOpen=false, mode='play';
+let hand='R', showFing=true, muteMine=false, simple=true;
 let groups=[], li=0, learnDone=false, viewPos=0;
 
 const fmt=ms=>{ms=Math.max(0,ms);const s=Math.floor(ms/1000);return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')};
 const posAt=now=>playing?anchorPos+(now-anchorPerf)*speed:pausePos;
 const tp=nt=>nt.drum?nt.n:nt.n+transpose;
-function send(m,at){ if(!out)return; try{ at==null?out.send(m):out.send(m,at); }catch(e){} }
-
+const practice=nt=>hand==='B'||nt.h===hand;
+function send(m,at){
+  if(out){ try{ at==null?out.send(m):out.send(m,at); }catch(e){} }
+  else Synth.handle(m,at);
+}
 function mapMsg(m){
   const hi=m[0]&0xF0, ch=m[0]&0x0F;
   if((hi===0x80||hi===0x90)&&ch!==9&&transpose){
@@ -297,10 +584,12 @@ function mapMsg(m){
   }
   return m;
 }
+const muted=h=>muteMine&&h&&(!stageOpen||mode==='play')&&(hand==='B'||hand===h);
 function schedule(e,at){
   const m=mapMsg(e.msg); if(!m)return;
   const hi=m[0]&0xF0, key=(m[0]&15)*128+m[1];
-  if(hi===0x90&&m[2]>0)active.add(key); else if(hi===0x80||hi===0x90)active.delete(key);
+  if(hi===0x90&&m[2]>0){ if(muted(e.h))return; active.add(key); }
+  else if(hi===0x80||hi===0x90)active.delete(key);
   send(m,at);
 }
 function pump(){
@@ -324,6 +613,7 @@ function silence(){
       for(let c=0;c<16;c++){ send([0xB0|c,64,0],at); send([0xB0|c,123,0],at); }
     }
   }
+  Synth.allOff();
   active.clear(); requestDraw();
 }
 function restoreState(pos){
@@ -340,7 +630,7 @@ function restoreState(pos){
 function setPlayLabels(){ const t=playing?'暂停':'播放'; $('playBtn').textContent=t; $('stPlay').textContent=t; }
 function play(){
   if(!song)return;
-  if(!out){ showErr('请先点“连接琴”。'); if(stageOpen)showHint('还没连接琴。退出全屏，点“连接琴”。'); return; }
+  if(!out)Synth.ensure();
   if(pausePos>=song.duration)pausePos=0;
   idx=song.events.findIndex(e=>e.t>=pausePos); if(idx<0)idx=song.events.length;
   if(pausePos>0)restoreState(pausePos);
@@ -365,11 +655,10 @@ function seekTo(ms){
   $('tNow').textContent=fmt(pausePos);
   if(was)play(); else requestDraw();
 }
+function replay(fn){ const was=playing; if(was)pause(); fn(); if(was)play(); else requestDraw(); }
 
 /* ---------- keyboard geometry ---------- */
-const isBlack=n=>[1,3,6,8,10].includes(((n%12)+12)%12);
 const NAMES=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
-const nameOf=n=>NAMES[n%12]+(Math.floor(n/12)-1);
 function layout(lo,hi,W){
   let whites=0; for(let n=lo;n<=hi;n++)if(!isBlack(n))whites++;
   const ww=W/whites, bw=ww*0.6, keys={}; let x=0;
@@ -384,17 +673,15 @@ function songRange(){
   lo=Math.max(21,lo-2); hi=Math.min(108,hi+2);
   while(hi-lo<24){ if(lo>21)lo--; if(hi-lo<24&&hi<108)hi++; }
   while(isBlack(lo))lo--; while(isBlack(hi))hi++;
-  if(lo%12!==0&&(lo%12)!==5){ /* start on C or F for a familiar look */ while(lo>21&&lo%12!==0&&lo%12!==5)lo--; }
+  while(lo>21&&lo%12!==0&&lo%12!==5)lo--;
   return [lo,hi];
 }
-
-/* notes sounding at song position p */
 function lowerBound(arr,t){ let a=0,b=arr.length; while(a<b){const m=(a+b)>>1; if(arr[m].t<t)a=m+1; else b=m;} return a; }
 function soundingAt(p){
-  const set=new Set(); if(!song)return set;
+  const map=new Map(); if(!song)return map;
   const ns=song.notes; let i=lowerBound(ns,p-song.maxDur-1);
-  for(;i<ns.length&&ns[i].t<=p;i++){ const nt=ns[i]; if(!nt.drum&&nt.t+nt.dur>p)set.add(tp(nt)); }
-  return set;
+  for(;i<ns.length&&ns[i].t<=p;i++){ const nt=ns[i]; if(!nt.drum&&nt.t+nt.dur>p&&!muted(nt.h))map.set(tp(nt),nt); }
+  return map;
 }
 
 /* ---------- small keyboard on main page ---------- */
@@ -405,41 +692,51 @@ function drawKb(){
   if(!W)return;
   if(cv.width!==Math.round(W*dpr)||cv.height!==Math.round(H*dpr)){cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr)}
   ctx.setTransform(dpr,0,0,dpr,0,0);
-  const kw=css.getPropertyValue('--key-white').trim(), kb=css.getPropertyValue('--key-black').trim(), lc=css.getPropertyValue('--lit').trim();
+  const kw=css.getPropertyValue('--key-white').trim(), kb=css.getPropertyValue('--key-black').trim(),
+        lc=css.getPropertyValue('--lit').trim(), ll=css.getPropertyValue('--litL').trim();
   ctx.fillStyle=kb; ctx.fillRect(0,0,W,H);
-  const L=layout(21,108,W), lit=playing?soundingAt(posAt(performance.now())):new Set();
-  for(let n=21;n<=108;n++){ const k=L.keys[n]; if(k.black)continue; ctx.fillStyle=lit.has(n)?lc:kw; ctx.fillRect(k.x+0.5,0,k.w-1,H); }
-  for(let n=21;n<=108;n++){ const k=L.keys[n]; if(!k.black)continue; ctx.fillStyle=lit.has(n)?lc:kb; ctx.fillRect(k.x,0,k.w,H*0.6); }
+  const L=layout(21,108,W), lit=playing?soundingAt(posAt(performance.now())):new Map();
+  const col=(n,def)=>lit.has(n)?(lit.get(n).h==='L'?ll:lc):def;
+  for(let n=21;n<=108;n++){ const k=L.keys[n]; if(k.black)continue; ctx.fillStyle=col(n,kw); ctx.fillRect(k.x+0.5,0,k.w-1,H); }
+  for(let n=21;n<=108;n++){ const k=L.keys[n]; if(!k.black)continue; ctx.fillStyle=col(n,kb); ctx.fillRect(k.x,0,k.w,H*0.6); }
 }
 
 /* ---------- full-screen stage ---------- */
 const fc=$('fall'), fx=fc.getContext('2d');
-const C={bg:'#0d0f12',lane:'#15181d',laneC:'#1d2127',white:'#e9ebe6',black:'#17191d',edge:'#0d0f12',note:'#2bb5a6',noteB:'#1f8e82',noteDim:'#2a5f59',
-  next:'rgba(43,181,166,.38)',lit:'#2bb5a6',press:'#5fd3c4',wrong:'#e5533d',line:'#f2c14e',label:'#7c858e',labelDark:'#3c434b',target:'#f2c14e',targetNote:'#f2c14e'};
+const C={bg:'#0d0f12',laneC:'#1d2127',white:'#e9ebe6',black:'#17191d',
+  noteR:'#2bb5a6',noteRB:'#1f8e82',noteL:'#8b7cf6',noteLB:'#6b5bd6',litR:'#2bb5a6',litL:'#8b7cf6',
+  next:'rgba(242,193,78,.28)',press:'#5fd3c4',wrong:'#e5533d',line:'#f2c14e',labelDark:'#3c434b',target:'#f2c14e'};
 let stageLayout=null, stageRange=[48,84];
-const kbHeight=H=>Math.max(70,H*0.26);
+const kbHeight=H=>Math.max(80,H*0.27);
 
 function buildGroups(){
   groups=[]; if(!song)return;
-  const ns=song.notes.filter(nt=>!nt.drum);
-  let cur=null;
+  song.notes.forEach(nt=>nt.inLearn=false);
+  const ns=song.notes.filter(nt=>!nt.drum&&practice(nt));
+  let g=null;
   for(const nt of ns){
     const n=tp(nt); if(n<0||n>127)continue;
-    if(!cur||nt.t-cur.t>45){ cur={t:nt.t,notes:[],need:new Set(),hit:new Set()}; groups.push(cur); }
-    cur.notes.push(nt); cur.need.add(n);
+    if(!g||nt.t-g.t>45){ g={t:nt.t,notes:[],need:new Set(),hit:new Set(),use:new Set()}; groups.push(g); }
+    g.notes.push(nt);
   }
-  if(topOnly)groups.forEach(g=>{ const mx=Math.max(...g.need); g.need=new Set([mx]); });
-  groups.forEach(g=>g.notes.forEach(nt=>{ nt.inLearn=g.need.has(tp(nt)); }));
+  groups.forEach(gr=>{
+    let use=gr.notes;
+    if(simple){
+      const R=gr.notes.filter(x=>x.h!=='L'), Lh=gr.notes.filter(x=>x.h==='L'); use=[];
+      if(R.length)use.push(R.reduce((a,b)=>tp(b)>tp(a)?b:a));
+      if(Lh.length)use.push(Lh.reduce((a,b)=>tp(b)<tp(a)?b:a));
+    }
+    use.forEach(x=>{ gr.use.add(x); gr.need.add(tp(x)); x.inLearn=true; });
+  });
 }
-function resetLearn(){ buildGroups(); li=0; learnDone=false; viewPos=groups.length?groups[0].t-1200:0; hideHint(); requestDraw(); }
+function resetLearn(){ buildGroups(); li=0; learnDone=false; viewPos=groups.length?groups[0].t-1200:0; requestDraw(); }
 
 function stageTimes(){
-  const now=performance.now();
   if(mode==='learn'){
     const target=learnDone?(song?song.duration:0):(groups[li]?groups[li].t:0);
     return {p:viewPos,target,win:3000};
   }
-  return {p:posAt(now),win:3000*speed};
+  return {p:posAt(performance.now()),win:3000*speed};
 }
 
 let lastFrame=0;
@@ -455,46 +752,46 @@ function drawStage(now){
   lastFrame=now;
   const p=st.p, win=st.win;
 
-  // lanes
   fx.fillStyle=C.bg; fx.fillRect(0,0,W,H);
-  for(let n=L.lo;n<=L.hi;n++){ const k=L.keys[n]; if(k.black)continue; if(n%12===0){ fx.fillStyle=C.laneC; fx.fillRect(k.x,0,1,hitY); } }
+  for(let n=L.lo;n<=L.hi;n++){ const k=L.keys[n]; if(!k.black&&n%12===0){ fx.fillStyle=C.laneC; fx.fillRect(k.x,0,1,hitY); } }
 
-  // which notes are "next"
-  const sounding=(mode==='play'&&playing)?soundingAt(p):new Set();
-  const nextKeys=new Set(); let targetSet=new Set();
+  const sounding=(mode==='play'&&playing)?soundingAt(p):new Map();
+  const soon=new Set();            // keys coming up next (soft highlight)
+  const badges=new Map();          // key -> note whose finger number is shown on the keyboard
+  let targetSet=new Set(), curG=null;
   if(mode==='learn'){
-    if(!learnDone&&groups[li]){ targetSet=groups[li].need; }
-    if(groups[li+1]&&!learnDone)groups[li+1].need.forEach(n=>nextKeys.add(n));
+    if(!learnDone&&groups[li]){ curG=groups[li]; targetSet=curG.need; curG.use.forEach(nt=>badges.set(tp(nt),nt)); }
+    if(!learnDone&&groups[li+1])groups[li+1].need.forEach(n=>soon.add(n));
   }else if(song){
-    const ns=song.notes; let i=lowerBound(ns,p);
-    let firstT=null;
+    sounding.forEach((nt,n)=>badges.set(n,nt));
+    const ns=song.notes; let i=lowerBound(ns,p), firstT=null;
     for(;i<ns.length;i++){ const nt=ns[i]; if(nt.drum)continue; if(nt.t>p+1600*speed)break;
-      if(firstT===null)firstT=nt.t; if(nt.t-firstT>45)break; const n=tp(nt); if(!sounding.has(n))nextKeys.add(n); }
+      if(!practice(nt)&&hand!=='B')continue;
+      if(firstT===null)firstT=nt.t; if(nt.t-firstT>45)break;
+      const n=tp(nt); if(!sounding.has(n)){ soon.add(n); if(!badges.has(n))badges.set(n,nt); } }
   }
 
   // falling notes
   if(song){
     const ns=song.notes; let i=lowerBound(ns,p-song.maxDur-1);
-    const curG=mode==='learn'&&!learnDone?groups[li]:null;
+    const fs=Math.max(10,Math.min(14,L.ww*0.55));
+    fx.font='600 '+fs+'px "DM Mono",ui-monospace,monospace'; fx.textAlign='center'; fx.textBaseline='bottom';
     for(;i<ns.length;i++){
       const nt=ns[i]; if(nt.t>p+win)break; if(nt.drum)continue;
       const n=tp(nt), k=L.keys[n]; if(!k)continue;
       const y2=hitY-(nt.t-p)/win*hitY, y1=hitY-(nt.t+nt.dur-p)/win*hitY;
       if(y2<0||y1>hitY)continue;
       const top=Math.max(0,y1), bot=Math.min(hitY,y2);
-      let col=k.black?C.noteB:C.note;
-      if(mode==='learn'){
-        const isTarget=curG&&curG.notes.includes(nt)&&curG.need.has(n);
-        const inTopFilter=nt.inLearn!==false;
-        if(isTarget)col=C.targetNote; else if(!inTopFilter)col=C.noteDim;
-      }
-      fx.fillStyle=col;
+      let col=nt.h==='L'?(k.black?C.noteLB:C.noteL):(k.black?C.noteRB:C.noteR), alpha=1;
+      if(mode==='learn'){ if(curG&&curG.use.has(nt))col=C.target; else if(!nt.inLearn)alpha=0.3; }
+      else if(!practice(nt))alpha=0.45;
+      fx.globalAlpha=alpha; fx.fillStyle=col;
       const pad=Math.max(1,k.w*0.08);
-      roundRect(fx,k.x+pad,top,k.w-pad*2,Math.max(3,bot-top),Math.min(5,k.w/3));
-      fx.fill();
+      roundRect(fx,k.x+pad,top,k.w-pad*2,Math.max(3,bot-top),Math.min(5,k.w/3)); fx.fill();
+      if(showFing&&nt.f&&alpha>0.4&&bot-top>=fs+4&&k.w>=10){ fx.fillStyle='#0d0f12'; fx.fillText(String(nt.f),k.x+k.w/2,bot-2); }
+      fx.globalAlpha=1;
     }
   }
-  // hit line
   fx.fillStyle=C.line; fx.fillRect(0,hitY-2,W,2);
 
   // keyboard
@@ -503,30 +800,38 @@ function drawStage(now){
   const fillFor=(n,black)=>{
     if(wrong.has(n))return C.wrong;
     if(pressed.has(n))return C.press;
-    if(sounding.has(n))return C.lit;
+    if(sounding.has(n))return sounding.get(n).h==='L'?C.litL:C.litR;
     if(targetSet.has(n))return C.target;
     return black?C.black:C.white;
   };
+  const busy=n=>pressed.has(n)||sounding.has(n)||targetSet.has(n);
   for(let n=L.lo;n<=L.hi;n++){ const k=L.keys[n]; if(k.black)continue;
     fx.fillStyle=fillFor(n,false); fx.fillRect(k.x+0.5,hitY,k.w-1,kbH);
-    if(nextKeys.has(n)&&!pressed.has(n)&&!sounding.has(n)){ fx.fillStyle=C.next; fx.fillRect(k.x+0.5,hitY,k.w-1,kbH); }
-  }
+    if(soon.has(n)&&!busy(n)){ fx.fillStyle=C.next; fx.fillRect(k.x+0.5,hitY,k.w-1,kbH); } }
   for(let n=L.lo;n<=L.hi;n++){ const k=L.keys[n]; if(!k.black)continue;
     fx.fillStyle=fillFor(n,true); fx.fillRect(k.x,hitY,k.w,kbH*0.6);
-    if(nextKeys.has(n)&&!pressed.has(n)&&!sounding.has(n)){ fx.fillStyle=C.next; fx.fillRect(k.x,hitY,k.w,kbH*0.6); }
-  }
-  // labels: C keys always, target/next keys get their name
+    if(soon.has(n)&&!busy(n)){ fx.fillStyle=C.next; fx.fillRect(k.x,hitY,k.w,kbH*0.6); } }
+  // note names on C keys and target keys
   fx.textAlign='center'; fx.textBaseline='bottom';
-  const fs=Math.max(9,Math.min(14,L.ww*0.42)); fx.font='500 '+fs+'px "DM Mono",ui-monospace,monospace';
+  const lfs=Math.max(9,Math.min(14,L.ww*0.42)); fx.font='500 '+lfs+'px "DM Mono",ui-monospace,monospace';
   for(let n=L.lo;n<=L.hi;n++){ const k=L.keys[n];
     const show=(n%12===0&&!k.black)||targetSet.has(n);
     if(!show||L.ww<11)continue;
     const yy=k.black?hitY+kbH*0.6-4:hitY+kbH-6;
-    fx.fillStyle=(targetSet.has(n)||pressed.has(n)||sounding.has(n))?'#06211e':(k.black?'#9aa4ad':C.labelDark);
+    fx.fillStyle=busy(n)?'#06211e':(k.black?'#9aa4ad':C.labelDark);
     fx.fillText(NAMES[n%12]+(k.black?'':(Math.floor(n/12)-1)),k.x+k.w/2,yy);
   }
-
-  // info text
+  // finger badges on keys
+  if(showFing){
+    badges.forEach((nt,n)=>{ const k=L.keys[n]; if(!k||!nt.f)return;
+      const r=Math.max(7,Math.min(13,L.ww*0.42)), cx=k.x+k.w/2, cy=k.black?hitY+kbH*0.33:hitY+kbH*0.6;
+      fx.beginPath(); fx.arc(cx,cy,r,0,Math.PI*2);
+      fx.fillStyle=targetSet.has(n)?'#0d0f12':(nt.h==='L'?C.noteL:C.noteR); fx.fill();
+      fx.lineWidth=1.5; fx.strokeStyle='#0d0f12'; fx.stroke();
+      fx.fillStyle=targetSet.has(n)?'#f2c14e':'#0d0f12'; fx.font='700 '+Math.round(r*1.25)+'px "DM Mono",ui-monospace,monospace';
+      fx.textBaseline='middle'; fx.fillText(String(nt.f),cx,cy+1); fx.textBaseline='bottom';
+    });
+  }
   if(song){
     if(mode==='learn') $('stInfo').textContent=learnDone?'完成':(Math.min(li+1,groups.length)+' / '+groups.length);
     else $('stInfo').textContent=fmt(p)+' / '+fmt(song.duration);
@@ -534,7 +839,6 @@ function drawStage(now){
 }
 function roundRect(c,x,y,w,h,r){ r=Math.max(0,Math.min(r,w/2,h/2)); c.beginPath(); c.moveTo(x+r,y); c.arcTo(x+w,y,x+w,y+h,r); c.arcTo(x+w,y+h,x,y+h,r); c.arcTo(x,y+h,x,y,r); c.arcTo(x,y,x+w,y,r); c.closePath(); }
 
-/* render loop: runs while something moves */
 let raf=0, needDraw=false;
 function requestDraw(){ needDraw=true; loop(); }
 function loop(){ if(!raf)raf=requestAnimationFrame(frame); }
@@ -545,53 +849,65 @@ function frame(now){
   if(moving||needDraw){ needDraw=false; if(moving)loop(); }
 }
 
-function showHint(html,btn,fn){ const h=$('stHint'); h.innerHTML=''; const p=document.createElement('div'); p.textContent=html; h.appendChild(p);
+function showHint(text,btn,fn){ const h=$('stHint'); h.innerHTML=''; const p=document.createElement('div'); p.textContent=text; h.appendChild(p);
   if(btn){ const b=document.createElement('button'); b.textContent=btn; b.addEventListener('click',fn); h.appendChild(b); }
   h.hidden=false; }
 function hideHint(){ $('stHint').hidden=true; }
+const canHearPiano=()=>!!(midi&&midi.inputs.size);
 
 function setMode(m){
   mode=m;
   $('mPlay').classList.toggle('on',m==='play'); $('mLearn').classList.toggle('on',m==='learn');
-  $('stPlay').hidden=m!=='play'; $('stTop').hidden=m!=='learn';
+  $('stPlay').hidden=m!=='play';
   hideHint();
-  if(m==='learn'){ pause(); resetLearn(); if(!midi||!midi.inputs.size) showHint('在琴上弹亮起的键。没连琴的话，也可以直接点屏幕下方的琴键。','开始',hideHint); }
-  else { lastFrame=0; }
+  if(m==='learn'){ pause(); resetLearn();
+    showHint(canHearPiano()?'在琴上弹黄色的键，弹对了自动往下走。键上的数字是建议用的手指：1 大拇指，5 小指。'
+      :'弹黄色的键。键上的数字是建议用的手指：1 大拇指，5 小指。这台设备听不到琴，弹完后点屏幕上方空白处跳到下一个，或者直接点下方的琴键。','开始',hideHint); }
+  else lastFrame=0;
   requestDraw();
 }
 async function openStage(m){
   if(!song)return;
+  if(!out)Synth.ensure();
   stageOpen=true; $('stage').hidden=false; $('main').setAttribute('aria-hidden','true');
-  $('stTitle').textContent=songName;
   stageRange=songRange(); stageLayout=null;
-  try{ if(!document.fullscreenElement&&document.documentElement.requestFullscreen) await document.documentElement.requestFullscreen({navigationUI:'hide'}); }catch(e){}
+  try{ const el=document.documentElement; const rf=el.requestFullscreen||el.webkitRequestFullscreen;
+    if(!document.fullscreenElement&&!document.webkitFullscreenElement&&rf) await rf.call(el); }catch(e){}
   try{ if(screen.orientation&&screen.orientation.lock) await screen.orientation.lock('landscape'); }catch(e){}
   try{ navigator.wakeLock&&navigator.wakeLock.request('screen').then(l=>wakeLock=l).catch(()=>{}); }catch(e){}
   setMode(m);
-  if(innerHeight>innerWidth&&m==='play')showHint('把手机横过来，琴键会更大、更好看。','知道了',hideHint);
+  if(innerHeight>innerWidth&&m==='play')showHint('把屏幕横过来，琴键会更大、更好看。','知道了',hideHint);
 }
 function closeStage(){
-  stageOpen=false; $('stage').hidden=true; $('main').removeAttribute('aria-hidden'); hideHint();
+  stageOpen=false; $('stage').hidden=true; $('main').removeAttribute('aria-hidden'); hideHint(); $('stOpts').hidden=true;
   try{ screen.orientation&&screen.orientation.unlock&&screen.orientation.unlock(); }catch(e){}
-  try{ if(document.fullscreenElement)document.exitFullscreen(); }catch(e){}
+  try{ if(document.fullscreenElement)document.exitFullscreen(); else if(document.webkitFullscreenElement)document.webkitExitFullscreen(); }catch(e){}
   if(!playing){ try{ wakeLock&&wakeLock.release(); }catch(e){} wakeLock=null; }
   pressed.clear(); requestDraw();
 }
 
-/* ---------- player input (piano keys or screen taps) ---------- */
+/* ---------- learning: advance when the right keys are played ---------- */
+function advance(){
+  li++; if(groups[li])groups[li].hit=new Set();
+  if(li>=groups.length){ learnDone=true; showHint('弹完了！','再来一遍',()=>{ hideHint(); resetLearn(); }); }
+  requestDraw();
+}
+function skipStep(){
+  const g=groups[li]; if(!g||learnDone)return;
+  const ns=[...g.need]; ns.forEach(n=>send([0x90,n,80])); setTimeout(()=>ns.forEach(n=>send([0x80,n,0])),350);
+  advance();
+}
 function press(n,fromScreen){
   pressed.add(n);
-  if(fromScreen&&out)send([0x90,n,80]);
+  if(fromScreen)send([0x90,n,80]);
   if(stageOpen&&mode==='learn'&&!learnDone&&groups[li]){
     const g=groups[li];
-    if(g.need.has(n)){ g.hit.add(n);
-      if(g.hit.size>=g.need.size){ li++; if(groups[li])groups[li].hit=new Set();
-        if(li>=groups.length){ learnDone=true; showHint('弹完了！','再来一遍',()=>{resetLearn();}); } }
-    } else wrong.set(n,performance.now());
+    if(g.need.has(n)){ g.hit.add(n); if(g.hit.size>=g.need.size)advance(); }
+    else wrong.set(n,performance.now());
   }
   requestDraw();
 }
-function release(n,fromScreen){ pressed.delete(n); if(fromScreen&&out)send([0x80,n,0]); requestDraw(); }
+function release(n,fromScreen){ pressed.delete(n); if(fromScreen)send([0x80,n,0]); requestDraw(); }
 function onInput(e){
   const d=e.data; if(!d||d.length<3)return;
   const hi=d[0]&0xF0;
@@ -607,42 +923,56 @@ function keyAt(x,y){
   for(let n=L.lo;n<=L.hi;n++){ const k=L.keys[n]; if(!k.black&&x>=k.x&&x<k.x+k.w)return n; }
   return null;
 }
-fc.addEventListener('pointerdown',e=>{ const r=fc.getBoundingClientRect(); const n=keyAt(e.clientX-r.left,e.clientY-r.top); if(n==null)return; e.preventDefault(); touchKeys.set(e.pointerId,n); press(n,true); });
+fc.addEventListener('pointerdown',e=>{
+  if(!$('stOpts').hidden){ toggleOpts(false); return; }
+  const r=fc.getBoundingClientRect(); const n=keyAt(e.clientX-r.left,e.clientY-r.top);
+  if(n==null){ if(mode==='learn'&&$('stHint').hidden)skipStep(); return; }
+  e.preventDefault(); touchKeys.set(e.pointerId,n); press(n,true);
+});
 const endTouch=e=>{ const n=touchKeys.get(e.pointerId); if(n==null)return; touchKeys.delete(e.pointerId); release(n,true); };
 fc.addEventListener('pointerup',endTouch); fc.addEventListener('pointercancel',endTouch); fc.addEventListener('pointerleave',endTouch);
 
-/* ---------- song loading ---------- */
-const sel=$('songSel');
-(function fillSongs(){
-  const g=document.createElement('optgroup'); g.label='示例曲（右手旋律）';
-  SONGS.forEach((s,i)=>{ const o=document.createElement('option'); o.value='b'+i; o.textContent=(i+1)+'. '+s.name; g.appendChild(o); });
-  sel.appendChild(g);
-  const f=document.createElement('optgroup'); f.label='我的文件'; f.id='myFiles'; sel.appendChild(f);
-})();
-const myFiles=[];
+/* ---------- song list ---------- */
+const sel=$('songSel'), stSong=$('stSong');
+const LIST=SONGS.map(d=>({name:d.name,cat:d.cat,def:d,song:null}));
+function fillSelects(){
+  for(const el of [sel,stSong]){
+    el.innerHTML=''; const gs={};
+    LIST.forEach((it,i)=>{ if(!gs[it.cat]){ gs[it.cat]=document.createElement('optgroup'); gs[it.cat].label=it.cat; el.appendChild(gs[it.cat]); }
+      const o=document.createElement('option'); o.value=String(i); o.textContent=it.name; gs[it.cat].appendChild(o); });
+    el.value=String(cur);
+  }
+}
+function selectSong(i){
+  i=(i%LIST.length+LIST.length)%LIST.length; cur=i;
+  const it=LIST[i]; if(!it.song)it.song=buildSong(it.def);
+  loadSong(it.song,it.name,!!it.def);
+  sel.value=String(i); stSong.value=String(i);
+}
 function loadSong(s,name,builtin){
   stop(); song=s; songName=name;
+  computeFingers();
   const meta=$('songMeta'); meta.innerHTML='';
-  [fmt(s.duration),s.noteCount+' 个音符',s.tracks+' 轨'].forEach(t=>{const sp=document.createElement('span');sp.textContent=t;meta.appendChild(sp)});
-  if(builtin){const tg=document.createElement('span');tg.className='tag';tg.textContent='示例曲';meta.appendChild(tg)}
+  const hasL=s.notes.some(n=>n.h==='L'&&!n.drum);
+  [fmt(s.duration),s.noteCount+' 个音符',hasL?(s.handInfo||'左右手'):'只有右手'].forEach(t=>{const sp=document.createElement('span');sp.textContent=t;meta.appendChild(sp)});
+  if(builtin){const tg=document.createElement('span');tg.className='tag';tg.textContent='内置曲';meta.appendChild(tg)}
   $('seek').max=Math.max(1,Math.ceil(s.duration)); $('tEnd').textContent=fmt(s.duration);
   stageRange=songRange(); stageLayout=null;
-  if(stageOpen){ $('stTitle').textContent=name; if(mode==='learn')resetLearn(); }
+  if(stageOpen){ hideHint(); if(mode==='learn')resetLearn(); }
   requestDraw();
 }
-sel.addEventListener('change',()=>{
-  const v=sel.value;
-  if(v[0]==='b'){ const s=SONGS[+v.slice(1)]; loadSong(buildSong(s),s.name,true); }
-  else { const f=myFiles[+v.slice(1)]; if(f)loadSong(f.song,f.name,false); }
-});
+sel.addEventListener('change',()=>selectSong(+sel.value));
+stSong.addEventListener('change',()=>{ selectSong(+stSong.value); stSong.blur(); });
+$('stPrev').addEventListener('click',()=>selectSong(cur-1));
+$('stNext').addEventListener('click',()=>selectSong(cur+1));
 $('fileIn').addEventListener('change',ev=>{
   const f=ev.target.files[0]; if(!f)return;
   const r=new FileReader();
   r.onload=()=>{ try{
       const s=parseMidi(r.result); if(!s.noteCount)throw new Error('文件里没有可以播放的音符');
       const name=f.name.replace(/\.(mid|midi)$/i,'');
-      myFiles.push({name,song:s}); const o=document.createElement('option'); o.value='f'+(myFiles.length-1); o.textContent=name; $('myFiles').appendChild(o);
-      sel.value=o.value; loadSong(s,name,false); hideErr();
+      LIST.push({name,cat:'我的文件',def:null,song:s}); cur=LIST.length-1; fillSelects();
+      selectSong(cur); hideErr();
     }catch(e){ showErr('打不开这个文件：'+e.message); } };
   r.readAsArrayBuffer(f); ev.target.value='';
 });
@@ -651,24 +981,53 @@ $('fileIn').addEventListener('change',ev=>{
 function setStatus(text,cls){ $('statusText').textContent=text; $('dot').className='dot'+(cls?' '+cls:''); }
 function showErr(t){ $('errMsg').textContent=t; $('errMsg').hidden=false; }
 function hideErr(){ $('errMsg').hidden=true; }
+const localSound=isIOS?'用 iPad 自己的扬声器发声':'用本机扬声器发声';
 function refreshPorts(){
   midi.inputs.forEach(i=>{ i.onmidimessage=onInput; });
   const ds=$('devSel'), prev=out&&out.id; ds.innerHTML='';
   const outs=[...midi.outputs.values()];
   outs.forEach(o=>{const op=document.createElement('option');op.value=o.id;op.textContent=o.name||'MIDI 设备';ds.appendChild(op)});
   $('devRow').hidden=!outs.length;
-  if(!outs.length){ out=null; setStatus('没找到琴。检查 USB 线和 OTG 转接头。','err'); $('connectBtn').hidden=false; $('connectBtn').textContent='重新检测'; return; }
+  if(!outs.length){ if(out)silence(); out=null; setStatus('没找到琴，先'+localSound+'。检查 USB 线和 OTG 转接头。','err'); $('connectBtn').hidden=false; $('connectBtn').textContent='重新检测'; return; }
   const pick=outs.find(o=>o.id===prev)||outs.find(o=>/casio|cdp|usb/i.test(o.name||''))||outs[0];
   ds.value=pick.id; useOutput(pick);
 }
-function useOutput(o){ if(out&&out!==o){silence()} out=o; setStatus('已连接：'+(o.name||'MIDI 设备'),'on'); $('connectBtn').hidden=true; }
+function useOutput(o){ if(out!==o)silence(); out=o; setStatus('已连接：'+(o.name||'MIDI 设备')+'，用琴发声','on'); $('connectBtn').hidden=true; }
 $('devSel').addEventListener('change',e=>{ const o=midi.outputs.get(e.target.value); if(o){ pause(); useOutput(o); } });
 $('connectBtn').addEventListener('click',()=>{
   hideErr();
-  if(!navigator.requestMIDIAccess){ setStatus('这个浏览器不支持 MIDI','err'); showErr('请用安卓版 Chrome 打开 https 网址上的这个页面。'); return; }
   navigator.requestMIDIAccess({sysex:false}).then(m=>{ midi=m; m.onstatechange=refreshPorts; refreshPorts(); })
-    .catch(()=>{ setStatus('无法使用 MIDI','err'); showErr('MIDI 权限被拒绝，或者当前页面不允许使用 MIDI。到 Chrome 的“网站设置 → MIDI 设备”里允许这个网站。'); });
+    .catch(()=>{ setStatus('无法使用 MIDI，先'+localSound,'err'); showErr('MIDI 权限被拒绝，或者当前页面不允许使用 MIDI。到 Chrome 的“网站设置 → MIDI 设备”里允许这个网站。'); });
 });
+if(!hasMIDI){ $('connectBtn').hidden=true; setStatus((isIOS?'iPad / iPhone 不能连琴，':'这个浏览器不能连琴，')+localSound); $('iosNote').hidden=false; }
+else setStatus('还没连接琴，现在'+localSound);
+
+/* ---------- options shared by the main page and the stage ---------- */
+function setHand(h){
+  replay(()=>{ hand=h; document.querySelectorAll('[data-hand]').forEach(b=>{ const on=b.dataset.hand===h; b.classList.toggle('on',on); b.setAttribute('aria-pressed',on); });
+    if(stageOpen&&mode==='learn'){ hideHint(); resetLearn(); } });
+}
+document.querySelectorAll('[data-hand]').forEach(b=>b.addEventListener('click',()=>setHand(b.dataset.hand)));
+function setOpt(k,v){
+  replay(()=>{
+    if(k==='fing')showFing=v; else if(k==='mute')muteMine=v; else if(k==='simple'){ simple=v; if(stageOpen&&mode==='learn')resetLearn(); }
+    document.querySelectorAll('[data-opt="'+k+'"]').forEach(c=>c.checked=v);
+  });
+}
+document.querySelectorAll('[data-opt]').forEach(c=>c.addEventListener('change',()=>setOpt(c.dataset.opt,c.checked)));
+function setSpeed(v){
+  const now=performance.now(), p=posAt(now);
+  speed=v/100; $('speed').value=v; $('stSpeed').value=v; $('speedVal').textContent=v+'%'; $('stSpeedVal').textContent=v+'%';
+  if(playing){ anchorPos=p; anchorPerf=now; }
+}
+$('speed').addEventListener('input',e=>setSpeed(+e.target.value));
+$('stSpeed').addEventListener('input',e=>setSpeed(+e.target.value));
+function toggleOpts(show){
+  const o=$('stOpts'); if(show==null)show=o.hidden;
+  if(show){ o.style.top=($('stBar').getBoundingClientRect().bottom+6)+'px'; }
+  o.hidden=!show; $('stOpt').classList.toggle('on',show); $('stOpt').setAttribute('aria-expanded',show);
+}
+$('stOpt').addEventListener('click',()=>toggleOpts());
 
 /* ---------- controls ---------- */
 $('playBtn').addEventListener('click',()=>playing?pause():play());
@@ -677,31 +1036,31 @@ $('stopBtn').addEventListener('click',stop);
 $('panicBtn').addEventListener('click',()=>{ if(playing)pause(); silence(); });
 $('seek').addEventListener('input',e=>{ dragging=true; $('tNow').textContent=fmt(+e.target.value); });
 $('seek').addEventListener('change',e=>{ dragging=false; if(song)seekTo(+e.target.value); });
-$('speed').addEventListener('input',e=>{
-  const now=performance.now(); const p=posAt(now);
-  speed=e.target.value/100; $('speedVal').textContent=e.target.value+'%';
-  if(playing){ anchorPos=p; anchorPerf=now; }
-});
 function setTr(v){ v=Math.max(-12,Math.min(12,v)); if(v===transpose)return;
-  const was=playing; if(was)pause(); transpose=v; $('trVal').textContent=(v>0?'+':'')+v;
-  stageRange=songRange(); stageLayout=null; if(stageOpen&&mode==='learn')resetLearn();
-  if(was)play(); else requestDraw(); }
+  replay(()=>{ transpose=v; $('trVal').textContent=(v>0?'+':'')+v; computeFingers();
+    stageRange=songRange(); stageLayout=null; if(stageOpen&&mode==='learn')resetLearn(); }); }
 $('trDown').addEventListener('click',()=>setTr(transpose-1));
 $('trUp').addEventListener('click',()=>setTr(transpose+1));
 $('stageBtn').addEventListener('click',()=>openStage('play'));
 $('learnBtn').addEventListener('click',()=>openStage('learn'));
 $('mPlay').addEventListener('click',()=>setMode('play'));
 $('mLearn').addEventListener('click',()=>setMode('learn'));
-$('stExit').addEventListener('click',()=>{ closeStage(); });
-$('stRestart').addEventListener('click',()=>{ if(mode==='learn')resetLearn(); else { const was=playing; stop(); if(was)play(); } });
-$('stTop').classList.add('on');
-$('stTop').addEventListener('click',()=>{ topOnly=!topOnly; $('stTop').classList.toggle('on',topOnly); resetLearn(); });
-document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&stageOpen)closeStage(); });
+$('stExit').addEventListener('click',closeStage);
+$('stRestart').addEventListener('click',()=>{ hideHint(); if(mode==='learn')resetLearn(); else { const was=playing; stop(); if(was)play(); } });
+document.addEventListener('keydown',e=>{
+  if(!stageOpen||e.target.tagName==='SELECT'||e.target.tagName==='INPUT')return;
+  if(e.key==='Escape')closeStage();
+  else if(e.key==='ArrowRight')selectSong(cur+1);
+  else if(e.key==='ArrowLeft')selectSong(cur-1);
+  else if(e.key===' '&&mode==='play'){ e.preventDefault(); playing?pause():play(); }
+});
+/* iPad / iPhone only allow sound after a tap */
+['pointerdown','touchend','click','keydown'].forEach(t=>document.addEventListener(t,()=>{ if(!out)Synth.ensure(); },{capture:true,passive:true}));
 window.addEventListener('resize',()=>{ stageLayout=null; requestDraw(); });
 document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible'&&(playing||stageOpen)&&navigator.wakeLock){ navigator.wakeLock.request('screen').then(l=>wakeLock=l).catch(()=>{}); } });
 if(window.matchMedia){ const mq=matchMedia('(prefers-color-scheme: dark)'); mq.addEventListener&&mq.addEventListener('change',requestDraw); }
 
-sel.value='b0'; loadSong(buildSong(SONGS[0]),SONGS[0].name,true);
+fillSelects(); setHand('R'); selectSong(0);
 })();
 </script>
 
